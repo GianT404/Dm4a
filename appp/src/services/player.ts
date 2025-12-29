@@ -1,0 +1,95 @@
+import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system/legacy';
+import { useMusicStore } from '../store/useMusicStore';
+import { parseVTT } from '../utils/lyricsParser';
+
+let soundObject: Audio.Sound | null = null;
+
+export const PlayerService = {
+  playTrack: async (trackId: string) => {
+    const store = useMusicStore.getState();
+    const track = store.playlist.find(t => t.id === trackId);
+
+    if (!track || track.status !== 'ready' || !track.localAudioUri) {
+      alert('Bài chưa tải xong hoặc lỗi!');
+      return;
+    }
+
+    try {
+      if (soundObject) {
+        await soundObject.unloadAsync();
+        soundObject = null;
+      }
+
+      store.setLyrics([]);
+      if (track.localLyricsUri) {
+        const info = await FileSystem.getInfoAsync(track.localLyricsUri);
+        if (info.exists) {
+          const vtt = await FileSystem.readAsStringAsync(track.localLyricsUri);
+          store.setLyrics(parseVTT(vtt));
+        }
+      }
+
+      console.log('Playing:', track.localAudioUri);
+      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true }); // Quan trọng cho iOS
+      
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: track.localAudioUri },
+        { shouldPlay: true }
+      );
+      
+      soundObject = sound;
+      store.setTrack(track);
+      store.setPlayState(true);
+
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded) {
+          store.setProgress(status.positionMillis, status.durationMillis || 0);
+          if (status.didJustFinish) {
+             store.playNext();
+             setTimeout(() => {
+                const newTrack = useMusicStore.getState().currentTrack;
+                if(newTrack) PlayerService.playTrack(newTrack.id);
+             }, 500);
+          }
+        }
+      });
+
+    } catch (e) { console.error('Play Error', e); }
+  },
+  playNext: async () => {
+     const store = useMusicStore.getState();
+     store.playNext(); 
+     
+     const newTrack = useMusicStore.getState().currentTrack; 
+     if (newTrack) {
+        await PlayerService.playTrack(newTrack.id); 
+     }
+  },
+
+  playPrev: async () => {
+     const store = useMusicStore.getState();
+     store.playPrev();
+     
+     const newTrack = useMusicStore.getState().currentTrack;
+     if (newTrack) {
+        await PlayerService.playTrack(newTrack.id);
+     }
+  },
+  togglePlay: async () => {
+    const store = useMusicStore.getState();
+    if (soundObject) {
+      if (store.isPlaying) {
+        await soundObject.pauseAsync();
+        store.setPlayState(false);
+      } else {
+        await soundObject.playAsync();
+        store.setPlayState(true);
+      }
+    }
+  },
+  
+  seekTo: async (ms: number) => {
+      if (soundObject) await soundObject.setPositionAsync(ms);
+  }
+};

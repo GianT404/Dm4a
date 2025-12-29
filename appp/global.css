@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.font-bold {
+  font-family: 'RobotoMono_800Bold';
+}
+
+.font-normal, .font-medium {
+  font-family: 'RobotoMono_400Regular';
+}
