@@ -4,7 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Search, Library } from 'lucide-react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, RobotoMono_400Regular, RobotoMono_700Bold } from '@expo-google-fonts/roboto-mono';
-
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 // Components & Styles
 import HomeScreen from './src/screens/HomeScreen';
 import PlaylistScreen from './src/screens/PlaylistScreen';
@@ -46,7 +46,8 @@ export default function App() {
   if (!fontsLoaded) return null;
 
   return (
-    <SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+<SafeAreaProvider>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
       <View className="flex-1 bg-black">
         
@@ -87,5 +88,7 @@ export default function App() {
 
       </View>
     </SafeAreaProvider>
+    </GestureHandlerRootView>
+    
   );
 }
