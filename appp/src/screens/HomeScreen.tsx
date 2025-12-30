@@ -24,17 +24,17 @@ export default function HomeScreen() {
   };
 
   return (
-<SafeAreaView className="flex-1 bg-black px-4 pt-4">
-  <Text className="text-2xl font-black tracking-widest text-white my-6 uppercase">
+<SafeAreaView className="flex-1 px-4 pt-4 bg-black">
+  <Text className="my-6 text-2xl font-black tracking-widest text-white uppercase">
     Dm4a
   </Text>
   
   {/* Thanh tìm kiếm mới có Icon */}
-  <View className="flex-row items-center bg-white rounded-xl px-4 py-3 mb-6">
+  <View className="flex-row items-center px-4 py-3 mb-6 bg-white rounded-xl">
     <Search color="#000000" size={20} />
     
     <TextInput 
-      className="flex-1 ml-3 text-black font-bold text-base"
+      className="flex-1 ml-3 text-base font-bold text-black"
       placeholder="Nghe gì?" 
       placeholderTextColor="#52525b"
       returnKeyType="search" 

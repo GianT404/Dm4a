@@ -10,7 +10,7 @@ export const TrackItem = ({ track, onPress, onRemove, isCurrent }: any) => {
       activeOpacity={0.8}
       className={`flex-row items-center px-6 py-6 border-b border-zinc-900 ${isCurrent ? 'bg-zinc-950' : 'bg-black'}`}
     >
-      <Image source={{ uri: track.thumbnail }} className="w-14 h-14 bg-zinc-900 rounded-lg" />
+      <Image source={{ uri: track.thumbnail }} className="rounded-lg w-14 h-14 bg-zinc-900" />
       
       <View className="flex-1 ml-6">
         <Text className={`font-black text-sm tracking-tighter ${isCurrent ? 'text-white' : 'text-zinc-200'}`} numberOfLines={1}>
@@ -24,7 +24,7 @@ export const TrackItem = ({ track, onPress, onRemove, isCurrent }: any) => {
       <View className="flex-row items-center">
         {track.status === 'downloading' && <ActivityIndicator size="small" color="#FFFFFF" />}
         {track.status === 'ready' && <CheckCircle size={16} color="#FFFFFF" />}
-        {!track.status && <Download size={16} color="#18181b" />}
+        {/* {!track.status && <Download size={16} color="#18181b" />} */}
         
         {onRemove && (
           <TouchableOpacity onPress={onRemove} className="ml-4 opacity-20">
