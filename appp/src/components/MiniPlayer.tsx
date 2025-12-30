@@ -12,15 +12,15 @@ export const MiniPlayer = () => {
     <TouchableOpacity 
       onPress={() => setFullPlayerVisible(true)}
       activeOpacity={0.9}
-      className="absolute bottom-24 left-4 right-4 bg-zinc-900 rounded-2xl p-3 flex-row items-center shadow-2xl border border-zinc-800"
+      className="absolute flex-row items-center p-3 border shadow-2xl bottom-24 left-4 right-4 bg-zinc-900 rounded-2xl border-zinc-800"
     >
       <Image source={{ uri: currentTrack.thumbnail }} className="w-10 h-10 rounded-lg" />
       <View className="flex-1 ml-3">
-        <Text className="text-white font-bold text-sm" numberOfLines={1}>{currentTrack.title}</Text>
-        <Text className="text-zinc-500 text-xs">{currentTrack.author}</Text>
+        <Text className="text-sm font-bold text-white" numberOfLines={1}>{currentTrack.title}</Text>
+        <Text className="text-xs text-zinc-500">{currentTrack.author}</Text>
       </View>
       
-      <TouchableOpacity onPress={PlayerService.togglePlay} className="w-10 h-10 items-center justify-center">
+      <TouchableOpacity onPress={PlayerService.togglePlay} className="items-center justify-center w-10 h-10">
         {isPlaying ? <Pause color="white" size={24} fill="white" /> : <Play color="white" size={24} fill="white" />}
       </TouchableOpacity>
 

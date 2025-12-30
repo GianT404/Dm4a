@@ -19,7 +19,7 @@ export default function PlaylistScreen() {
   return (
       <TouchableOpacity 
         onPress={() => removeFromPlaylist(item.id)}
-        className="bg-red-600 justify-center items-end px-6 mb-2 rounded-r-lg"
+        className="items-end justify-center px-6 mb-2 bg-red-600 rounded-r-lg"
         style={{ width: 100 }} // Độ rộng vùng xóa
       >
         <Animated.View style={{ transform: [{ scale }] }}>
@@ -29,8 +29,8 @@ export default function PlaylistScreen() {
     );
   };
   return (
-    <SafeAreaView className="flex-1 bg-black px-4 pt-4">
-      <Text className="text-2xl font-bold text-white my-4">Playlist ({playlist.length})</Text>
+    <SafeAreaView className="flex-1 px-4 pt-4 bg-[#121212]">
+      <Text className="my-4 text-2xl font-bold text-white">Playlist ({playlist.length})</Text>
       <FlatList
         data={playlist}
         keyExtractor={(item) => item.id}
@@ -46,6 +46,7 @@ renderItem={({ item }) => (
               track={item} 
               isCurrent={currentTrack?.id === item.id}
               onPress={() => PlayerService.playTrack(item.id)}
+              hideStatus={true}
             />
           </Swipeable>
         )}

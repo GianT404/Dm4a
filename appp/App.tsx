@@ -48,9 +48,8 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
 <SafeAreaProvider>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
+      <StatusBar barStyle="light-content" backgroundColor="#fff" />
       <View className="flex-1 bg-black">
-        
         {/* Main Content Area */}
         <View className="flex-1 mb-20"> 
           {/* mb-20 để chừa chỗ cho TabBar và MiniPlayer */}
@@ -62,10 +61,10 @@ export default function App() {
         <FullPlayer />
 
         {/* Bottom Tab Bar */}
-        <View className="absolute bottom-1 left-0 right-0 h-20 bg-black flex-row border-t border-zinc-900 px-6">
+        <View className="absolute left-0 right-0 flex-row h-20 px-6 bg-[#121212] border-t bottom-1 border-zinc-900">
           <TouchableOpacity 
             onPress={() => setTab('home')} 
-            className="flex-1 items-center justify-center"
+            className="items-center justify-center flex-1"
             activeOpacity={0.8}
           >
             <Search color={tab === 'home' ? 'white' : '#3f3f46'} size={24} />
@@ -76,7 +75,7 @@ export default function App() {
           
           <TouchableOpacity 
             onPress={() => setTab('library')} 
-            className="flex-1 items-center justify-center"
+            className="items-center justify-center flex-1"
             activeOpacity={0.8}
           >
             <Library color={tab === 'library' ? 'white' : '#3f3f46'} size={24} />
