@@ -74,10 +74,17 @@ export const useMusicStore = create<MusicState>()(
           const metaRes = await axios.get(`${API_URL}/meta?id=${id}`);
           const tracks = metaRes.data.tracks || [];
           
-          const availableLyrics = tracks.map((t: any) => ({
-            code: t.code,
-            name: t.name || t.code.toUpperCase()
-          }));
+const availableLyrics = tracks.map((t: any) => {
+    let langName = t.name || t.code.toUpperCase();
+    if (typeof langName === 'object' && langName !== null) {
+        langName = langName.text || langName.name || t.code.toUpperCase();
+    }
+
+    return {
+        code: t.code,
+        name: String(langName) // Ép cứng thành chuỗi cho an toàn tuyệt đối
+    };
+});
 
           let bestLang = tracks.find((t: any) => t.code === 'vi')?.code 
                       || tracks.find((t: any) => t.code === 'en')?.code
