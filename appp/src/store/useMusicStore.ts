@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system/legacy'; // Giữ legacy như đã fix
 import axios from 'axios';
 import { API_URL } from '../services/api';
-import { LyricLine } from '../utils/lyricsParser';
+import { parseVTT, LyricLine } from '../utils/lyricsParser';
 
 interface Track {
   id: string;
@@ -15,6 +15,9 @@ interface Track {
   localAudioUri?: string;
   localLyricsUri?: string;
   status: 'downloading' | 'ready' | 'error';
+  // 🔥 MỚI: Lưu danh sách ngôn ngữ có sẵn (VD: [{code: 'vi', name: 'Vietnamese'}])
+  availableLyrics?: { code: string; name: string }[]; 
+  currentLang?: string; // Ngôn ngữ đang chọn
 }
 
 interface MusicState {
@@ -24,7 +27,7 @@ interface MusicState {
   isPlaying: boolean;
   position: number;
   duration: number;
-  isFullPlayerVisible: boolean; 
+  isFullPlayerVisible: boolean;
 
   setFullPlayerVisible: (visible: boolean) => void;
   setPlayState: (isPlaying: boolean) => void;
@@ -35,6 +38,8 @@ interface MusicState {
   removeFromPlaylist: (id: string) => void;
   playNext: () => void;
   playPrev: () => void;
+  
+  changeLyricsLanguage: (trackId: string, langCode: string) => Promise<void>;
 }
 
 export const useMusicStore = create<MusicState>()(
@@ -55,19 +60,25 @@ export const useMusicStore = create<MusicState>()(
       setLyrics: (l) => set({ lyrics: l }),
 
       addToPlaylist: async (rawTrack) => {
-        const { id, title } = rawTrack;
+        const { id } = rawTrack;
         if (!id || get().playlist.some(t => t.id === id)) return;
 
-        const newTrack: Track = { ...rawTrack as Track, status: 'downloading' };
+        const newTrack: Track = { ...rawTrack as Track, status: 'downloading', availableLyrics: [] };
         set(state => ({ playlist: [newTrack, ...state.playlist] }));
 
         try {
           const dir = FileSystem.documentDirectory + 'music_storage/';
           await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
 
+          // 1. Lấy Meta để biết có bao nhiêu ngôn ngữ
           const metaRes = await axios.get(`${API_URL}/meta?id=${id}`);
           const tracks = metaRes.data.tracks || [];
           
+          const availableLyrics = tracks.map((t: any) => ({
+            code: t.code,
+            name: t.name || t.code.toUpperCase()
+          }));
+
           let bestLang = tracks.find((t: any) => t.code === 'vi')?.code 
                       || tracks.find((t: any) => t.code === 'en')?.code
                       || tracks.find((t: any) => t.code === 'auto')?.code
@@ -78,6 +89,7 @@ export const useMusicStore = create<MusicState>()(
           
           let lyricsDest = undefined;
           let lyricsTask = null;
+
           if (bestLang) {
              lyricsDest = dir + `${id}_${bestLang}.vtt`;
              lyricsTask = FileSystem.downloadAsync(
@@ -93,7 +105,9 @@ export const useMusicStore = create<MusicState>()(
               ...t, 
               status: 'ready',
               localAudioUri: audioRes.uri,
-              localLyricsUri: lyricsTask ? lyricsDest : undefined
+              localLyricsUri: lyricsTask ? lyricsDest : undefined,
+              availableLyrics: availableLyrics, // Lưu danh sách vào track
+              currentLang: bestLang
             } : t)
           }));
 
@@ -110,7 +124,7 @@ export const useMusicStore = create<MusicState>()(
         if(!currentTrack) return;
         const idx = playlist.findIndex(t => t.id === currentTrack.id);
         const next = playlist[idx + 1] || playlist[0];
-        if(next) set({ currentTrack: next }); 
+        if(next) set({ currentTrack: next });
       },
       
       playPrev: () => {
@@ -120,6 +134,43 @@ export const useMusicStore = create<MusicState>()(
         const prev = playlist[idx - 1] || playlist[playlist.length - 1];
         if(prev) set({ currentTrack: prev });
       },
+
+      changeLyricsLanguage: async (trackId, langCode) => {
+        const { playlist, currentTrack } = get();
+        const track = playlist.find(t => t.id === trackId);
+        if (!track) return;
+
+        try {
+            const dir = FileSystem.documentDirectory + 'music_storage/';
+            const lyricsDest = dir + `${trackId}_${langCode}.vtt`;
+
+            // Kiểm tra file đã có chưa, chưa có thì tải
+            const fileInfo = await FileSystem.getInfoAsync(lyricsDest);
+            if (!fileInfo.exists) {
+                await FileSystem.downloadAsync(
+                    `${API_URL}/download-lyrics?id=${trackId}&lang=${langCode}`, 
+                    lyricsDest
+                );
+            }
+
+            const vttContent = await FileSystem.readAsStringAsync(lyricsDest);
+            const newLyrics = parseVTT(vttContent);
+
+            set({ lyrics: newLyrics });
+            
+            // Cập nhật thông tin Track trong Playlist và CurrentTrack
+            const updatedTrack = { ...track, localLyricsUri: lyricsDest, currentLang: langCode };
+            
+            set(state => ({
+                playlist: state.playlist.map(t => t.id === trackId ? updatedTrack : t),
+                currentTrack: state.currentTrack?.id === trackId ? updatedTrack : state.currentTrack
+            }));
+
+        } catch (error) {
+            console.error("Error changing language:", error);
+            alert("Không tải được ngôn ngữ này!");
+        }
+      }
     }),
     { name: 'cold-music-offline', storage: createJSONStorage(() => AsyncStorage) }
   )

@@ -1,3 +1,5 @@
+//ok rồi đừng đụng vào!
+
 import ytdlp from "yt-dlp-exec";
 import yts from "yt-search";
 import { Innertube, UniversalCache } from "youtubei.js";
