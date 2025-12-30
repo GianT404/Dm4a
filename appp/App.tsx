@@ -68,9 +68,6 @@ export default function App() {
             activeOpacity={0.8}
           >
             <Search color={tab === 'home' ? 'white' : '#3f3f46'} size={24} />
-            <Text className={`text-[10px] mt-2 font-bold tracking-widest ${tab === 'home' ? 'text-white' : 'text-zinc-600'}`} style={{ fontFamily: 'RobotoMono_700Bold' }}>
-              TÌM KIẾM
-            </Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -79,9 +76,6 @@ export default function App() {
             activeOpacity={0.8}
           >
             <Library color={tab === 'library' ? 'white' : '#3f3f46'} size={24} />
-            <Text className={`text-[10px] mt-2 font-bold tracking-widest ${tab === 'library' ? 'text-white' : 'text-zinc-600'}`} style={{ fontFamily: 'RobotoMono_700Bold' }}>
-              PLAYLIST
-            </Text>
           </TouchableOpacity>
         </View>
 
