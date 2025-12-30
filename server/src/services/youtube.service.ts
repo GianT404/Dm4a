@@ -3,6 +3,7 @@ import yts from "yt-search";
 import { Innertube, UniversalCache } from "youtubei.js";
 import fs from 'fs';
 import path from 'path';
+import ytdl from "@distube/ytdl-core";
 
 const COOKIES_PATH = path.resolve(__dirname, '../../cookies.txt');
 const hasCookies = fs.existsSync(COOKIES_PATH);
@@ -96,11 +97,11 @@ export const YouTubeService = {
   // 2. Lấy Metadata & List Sub 
   getMetadata: async (videoId: string) => {
     console.log(`[Meta] 🔍 Đang soi video: ${videoId}`);
-    
+
     try {
       const client = await getClient();
       const info = await client.getInfo(videoId);
-      
+
       let tracks: any[] = [];
 
       // METHOD 1: Thử lấy từ captions trong info
@@ -124,13 +125,13 @@ export const YouTubeService = {
         try {
           const playerResp = (info as any).player_response;
           const captionsList = playerResp?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
-          
+
           tracks = captionsList.map((t: any) => ({
             code: t.languageCode,
             name: t.name?.simpleText || t.languageCode,
             isAuto: t.kind === 'asr'
           }));
-          
+
           console.log(`[Meta] Tìm thấy ${tracks.length} tracks từ player_response`);
         } catch (e) {
           console.log(`[Meta] Không lấy được từ player_response:`, e);
@@ -141,13 +142,13 @@ export const YouTubeService = {
       if (tracks.length === 0) {
         console.log(`[Meta]  Thử Innertube API trực tiếp...`);
         const innerTracks = await getCaptionsViaInnertube(videoId);
-        
+
         tracks = innerTracks.map((t: any) => ({
           code: t.languageCode,
           name: t.name?.simpleText || t.languageCode,
           isAuto: t.kind === 'asr'
         }));
-        
+
         console.log(`[Meta] ${tracks.length > 0 ? '✅' : '❌'} Innertube: ${tracks.length} tracks`);
       }
 
@@ -156,7 +157,7 @@ export const YouTubeService = {
         try {
           console.log(`[Meta]  Thử getTranscript...`);
           const transcript = await info.getTranscript();
-          
+
           // Check nhiều cách có thể có data
           const hasData = (transcript as any)?.transcript_content?.body?.initial_segments
             || (transcript as any)?.actions?.[0]?.updateEngagementPanelAction;
@@ -183,7 +184,7 @@ export const YouTubeService = {
         title: info.basic_info.title || 'Unknown',
         tracks: tracks 
       };
-      
+
     } catch (error: any) {
       console.error(`[Meta Error]`, error);
       throw new Error(`Cannot get metadata: ${error.message}`);
@@ -191,19 +192,52 @@ export const YouTubeService = {
   },
 
   // 3. Download Audio
-  downloadAudioStream: (videoId: string) => {
+downloadAudioStream: (videoId: string) => {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
-    const args: any = {
-      output: "-",
-      format: "bestaudio[ext=m4a]",
-      noCheckCertificates: true,
-      noWarnings: true,
-    };
-    if (hasCookies) args.cookies = COOKIES_PATH;
+    console.log(`[Stream]  Start streaming: ${videoId}`);
 
-    const subprocess = (ytdlp as any).exec(url, args, { stdio: ["ignore", "pipe", "ignore"] });
-    if (!subprocess.stdout) throw new Error("Audio Stream Failed");
-    return subprocess.stdout;
+    try {
+        const args: any = {
+            output: "-",
+            format: "bestaudio[ext=m4a]/bestaudio/best", 
+
+            noCheckCertificates: true,
+            noWarnings: true,
+            preferFreeFormats: true,
+            addHeader: [
+                'referer:youtube.com',
+                'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            ]
+        };
+
+        if (hasCookies) {
+             args.cookies = COOKIES_PATH;
+        }
+
+        // Mở pipe stderr để debug nếu lỗi
+        const subprocess = (ytdlp as any).exec(url, args, { stdio: ["ignore", "pipe", "pipe"] });
+
+        if (subprocess.stderr) {
+            subprocess.stderr.on('data', (d: any) => console.log(`[yt-dlp log]: ${d.toString()}`));
+        }
+
+        if (subprocess.stdout) return subprocess.stdout;
+
+        throw new Error("yt-dlp failed to start stdout");
+
+    } catch (e) {
+        console.warn(`[Stream] ⚠️ yt-dlp failed, switching to fallback...`, e);
+
+        // CÁCH 2: Fallback cuối cùng (ytdl-core)
+        // Nếu yt-dlp vẫn lỗi thì dùng cái này cứu cánh
+        const agent = ytdl.createAgent(hasCookies ? JSON.parse(fs.readFileSync(COOKIES_PATH, 'utf-8')) : undefined);
+        return ytdl(url, {
+            agent,
+            filter: 'audioonly',
+            quality: 'lowestaudio',
+            highWaterMark: 1 << 25
+        });
+    }
   },
 
   // 4. Download Lyrics 
@@ -216,10 +250,10 @@ export const YouTubeService = {
 
       // METHOD 1: Thử lấy baseUrl từ player_response
       let baseUrl: string | null = null;
-      
+
       try {
         const captions = (info as any).player_response?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
-        
+
         let track = captions.find((t: any) => t.languageCode === langCode);
         if (langCode === 'auto' && !track) {
           track = captions.find((t: any) => t.kind === 'asr');
@@ -240,7 +274,7 @@ export const YouTubeService = {
           const track = captionTracks.find((t: any) => 
             t.language_code === langCode || (langCode === 'auto' && t.vss_id?.includes('.'))
           );
-          
+
           if (track?.base_url) {
             baseUrl = track.base_url;
             console.log(`[Lyrics]  Tìm thấy baseUrl từ captions`);
@@ -254,7 +288,7 @@ export const YouTubeService = {
       if (baseUrl) {
         const vttUrl = `${baseUrl}&fmt=vtt`;
         console.log(`[Lyrics]  Fetching: ${vttUrl.substring(0, 100)}...`);
-        
+
         const response = await fetch(vttUrl, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -279,7 +313,7 @@ export const YouTubeService = {
 
       // Check nhiều structure có thể có
       let segments: any[] = [];
-      
+
       if (data?.transcript_content?.body?.initial_segments) {
         segments = data.transcript_content.body.initial_segments;
       } else if (data?.actions?.[0]?.updateEngagementPanelAction) {
@@ -289,12 +323,12 @@ export const YouTubeService = {
 
       if (segments.length > 0) {
         let vtt = "WEBVTT\n\n";
-        
+
         segments.forEach((s: any) => {
           const start = Number(s.start_ms || s.startMs || 0);
           const end = Number(s.end_ms || s.endMs || start + 2000);
           const text = s.snippet?.text || s.snippet?.runs?.[0]?.text || '';
-          
+
           if (!isNaN(start) && text) {
             vtt += `${formatVTTTime(start)} --> ${formatVTTTime(end)}\n${text}\n\n`;
           }

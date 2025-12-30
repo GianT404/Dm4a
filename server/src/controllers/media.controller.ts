@@ -18,13 +18,27 @@ export const MediaController = {
     } catch (e) { res.status(500).json({ error: 'Meta Error' }); }
   },
 
-  downloadAudio: async (req: Request, res: Response) => {
+downloadAudio: async (req: Request, res: Response) => {
     try {
       const { id } = req.query;
+      
+      // Lấy stream
       const stream = YouTubeService.downloadAudioStream(String(id));
-      res.setHeader('Content-Type', 'audio/mp4');
+      
+      //res.setHeader('Content-Type', 'audio/mp4');
+      res.setHeader('Content-Type', 'application/octet-stream');
+      // Pipe stream ra response
       stream.pipe(res);
-    } catch (e) { res.status(500).end(); }
+
+      stream.on('error', (err: any) => {
+         console.error('[Stream Pipe Error]', err);
+         if (!res.headersSent) res.status(500).end();
+      });
+
+    } catch (e) { 
+        console.error('[Controller Error]', e);
+        if (!res.headersSent) res.status(500).end(); 
+    }
   },
 
   downloadLyrics: async (req: Request, res: Response) => {

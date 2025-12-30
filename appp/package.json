@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
+    "@distube/ytdl-core": "^4.16.12",
     "@expo-google-fonts/roboto-mono": "^0.4.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/slider": "5.0.1",
