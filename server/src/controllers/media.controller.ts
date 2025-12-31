@@ -2,12 +2,24 @@ import type { Request, Response } from 'express';
 import { YouTubeService } from '../services/youtube.service';
 
 export const MediaController = {
+  // 👇 Đã sửa: Trả về data luôn (Array), không bọc trong object nữa
   search: async (req: Request, res: Response) => {
     try {
       const { query } = req.query;
       const data = await YouTubeService.searchVideo(String(query));
-      res.json({ success: true, data });
+      res.json(data); 
     } catch (e) { res.status(500).json({ error: 'Search Error' }); }
+  },
+
+  // 👇 Đã thêm: Hàm này lúc nãy ông bị thiếu
+  getTrending: async (req: Request, res: Response) => {
+    try {
+      const data = await YouTubeService.getTrending();
+      res.json(data);
+    } catch (e) { 
+      console.error(e);
+      res.status(500).json({ error: 'Trending Error' }); 
+    }
   },
 
   getMeta: async (req: Request, res: Response) => {
@@ -18,16 +30,12 @@ export const MediaController = {
     } catch (e) { res.status(500).json({ error: 'Meta Error' }); }
   },
 
-downloadAudio: async (req: Request, res: Response) => {
+  downloadAudio: async (req: Request, res: Response) => {
     try {
       const { id } = req.query;
-      
-      // Lấy stream
       const stream = YouTubeService.downloadAudioStream(String(id));
       
-      //res.setHeader('Content-Type', 'audio/mp4');
       res.setHeader('Content-Type', 'application/octet-stream');
-      // Pipe stream ra response
       stream.pipe(res);
 
       stream.on('error', (err: any) => {

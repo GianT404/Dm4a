@@ -56,20 +56,15 @@ const handleShufflePress = () => {
       </Text>
 
       {/* 3️⃣ Thanh Search Bar */}
-      <View className="flex-row items-center px-4 py-3 mb-4 rounded-full bg-zinc-800">
+      <View className="flex-row items-center px-4 py-3 mb-6 bg-white rounded-xl">
         <Search color="#a1a1aa" size={20} />
         <TextInput 
-          className="flex-1 ml-3 text-base text-white font-roboto-regular"
+          className="flex-1 ml-3 text-base font-bold text-black"
           placeholder="Tìm bài hát hoặc nghệ sĩ..."
-          placeholderTextColor="#71717a"
+          placeholderTextColor="#52525b"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Text className="text-zinc-400">Hủy</Text>
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* 4️⃣ Nút Shuffle & Số lượng bài */}

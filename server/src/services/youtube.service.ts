@@ -13,6 +13,15 @@ const hasCookies = fs.existsSync(COOKIES_PATH);
 if (hasCookies) console.log('SERVER: Found cookies.txt ');
 else console.warn('SERVER: No cookies found');
 
+// Helper Format Time
+const parseDuration = (timeStr: string) => {
+  if (!timeStr) return 0;
+  const parts = timeStr.split(':').map(Number);
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return parts[0];
+};
+
 // Youtubei Singleton
 let ytClientPromise: Promise<Innertube> | null = null;
 const getClient = () => {
@@ -28,7 +37,7 @@ const getClient = () => {
   return ytClientPromise;
 };
 
-// Helper Format Time
+// Helper Format Time (VTT)
 const formatVTTTime = (ms: number) => {
   if (isNaN(ms)) return "00:00:00.000";
   const date = new Date(ms);
@@ -80,7 +89,70 @@ const getCaptionsViaInnertube = async (videoId: string) => {
 };
 
 export const YouTubeService = {
-  // 1. Search
+  
+  // 👇 FIX MẠNH TAY HÀM NÀY: Dùng yt-search thay vì Innertube để tránh lỗi API
+  getTrending: async () => {
+    try {
+      console.log(`[Trending] 🔥 Fetching OFFICIAL MVs via yt-search...`);
+      
+      // 1. Dùng yt-search (Ổn định hơn cho việc search)
+      const r = await yts("MV Vpop Official mới nhất");
+      const videos = r.videos || [];
+
+      console.log(`[Trending] Found raw: ${videos.length} items`);
+
+      // 2. Bộ lọc "Hardcore Mode" (Giữ nguyên logic lọc xịn xò)
+      const cleanVideos = videos.filter((v: any) => {
+        const title = (v.title || "").toLowerCase();
+        
+        // yt-search có sẵn trường seconds, quá ngon!
+        let seconds = v.seconds;
+        if (!seconds && v.timestamp) {
+             seconds = parseDuration(v.timestamp);
+        }
+        if (!seconds) seconds = 300; // Fallback
+
+        // MV chuẩn chỉ tầm 3-7 phút. > 7 phút (420s) auto loại.
+        if (seconds > 420) return false; 
+        if (seconds < 60) return false; 
+
+        // Blacklist cực gắt
+        const blacklist = [
+            "tuyển tập", "liên khúc", "tổng hợp", "collection", 
+            "album", "full", "list", "playlist", 
+            "top 10", "top 20", "top 50", "top 100", "top 150", "top hit", 
+            "mashup", "cover", "karaoke", "nhạc chế", "parody", 
+            "ver", "version", 
+            "review", "reaction", "phim ca nhạc"
+        ];
+
+        if (blacklist.some(badWord => title.includes(badWord))) {
+            return false;
+        }
+        
+        return true; 
+      });
+
+      console.log(`[Trending] Cleaned: ${cleanVideos.length} MVs`);
+
+      // Fallback
+      const finalList = cleanVideos.length > 0 ? cleanVideos : videos;
+
+      return finalList.slice(0, 7).map((v: any) => ({
+        id: v.videoId, // yt-search dùng videoId
+        title: v.title,
+        thumbnail: v.thumbnail,
+        author: v.author?.name || "Unknown Artist",
+        duration: v.timestamp || "00:00",
+      }));
+
+    } catch (e: any) {
+      console.error("[Trending Error]", e);
+      return []; 
+    }
+  },
+
+  // 1. Search (Giữ nguyên)
   searchVideo: async (keyword: string) => {
     try {
       const r = await yts(keyword);
@@ -96,7 +168,7 @@ export const YouTubeService = {
     }
   },
 
-  // 2. Lấy Metadata & List Sub 
+  // 2. Lấy Metadata & List Sub (Giữ nguyên code của ông)
   getMetadata: async (videoId: string) => {
     console.log(`[Meta] 🔍 Đang soi video: ${videoId}`);
 
@@ -193,7 +265,7 @@ export const YouTubeService = {
     }
   },
 
-  // 3. Download Audio
+  // 3. Download Audio (Giữ nguyên code của ông)
 downloadAudioStream: (videoId: string) => {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
     console.log(`[Stream]  Start streaming: ${videoId}`);
@@ -242,7 +314,7 @@ downloadAudioStream: (videoId: string) => {
     }
   },
 
-  // 4. Download Lyrics 
+  // 4. Download Lyrics (Giữ nguyên code của ông)
   getLyricsContent: async (videoId: string, langCode: string) => {
     console.log(`[Lyrics] Đang tải: ${langCode} cho ${videoId}`);
 
