@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, Image, TouchableOpacity, Modal, Dimensions, FlatList, ScrollView } from 'react-native';
 import { useMusicStore } from '../store/useMusicStore';
 import { PlayerService } from '../services/player';
-import { ChevronDown, Play, Pause, SkipBack, SkipForward, MessageSquare, X } from 'lucide-react-native';
+import { ChevronDown, Play, Pause, SkipBack, SkipForward, MessageSquare, X, CaptionsIcon } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
 import { LyricsView } from './LyricsView';
 
@@ -45,7 +45,7 @@ export const FullPlayer = () => {
           </Text>
           {(currentTrack.availableLyrics && currentTrack.availableLyrics.length > 0) ? (
             <TouchableOpacity onPress={() => setShowLangModal(true)}>
-              <MessageSquare color="white" size={24} />
+              <CaptionsIcon color="white" size={24} />
             </TouchableOpacity>
           ) : (
             <View className="w-6" />

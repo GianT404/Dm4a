@@ -118,7 +118,7 @@ export const YouTubeService = {
 
         // Blacklist cực gắt
         const blacklist = [
-            "tuyển tập", "liên khúc", "tổng hợp", "collection", 
+            "tuyển tập", "liên khúc", "tổng hợp", "collection", "Bảng xếp hạng", 
             "album", "full", "list", "playlist", 
             "top 10", "top 20", "top 50", "top 100", "top 150", "top hit", 
             "mashup", "cover", "karaoke", "nhạc chế", "parody", 
