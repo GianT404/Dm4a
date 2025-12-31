@@ -35,15 +35,13 @@ export const FullPlayer = () => {
     <Modal visible={isFullPlayerVisible} animationType="slide" statusBarTranslucent>
       <View className="flex-1 bg-black">
         <StatusBar barStyle="light-content" />
-
-        {/* 🖼️ BACKGROUND IMAGE FULL SCREEN (Chỉ hiện ở tab Artwork) */}
         {currentPage === 0 && (
           <View className="absolute inset-0 w-full h-full">
             <Image
               source={{ uri: currentTrack.thumbnail }}
               className="w-full h-full opacity-60" 
               resizeMode="cover"
-              blurRadius={10} // Làm mờ nhẹ background để nghệ hơn
+              blurRadius={5} 
             />
             {/* Lớp phủ đen để chữ dễ đọc */}
             <LinearGradient
@@ -93,7 +91,7 @@ export const FullPlayer = () => {
                     
                     {/* Thông tin bài hát */}
                     <View className="items-center w-full px-8 mt-10">
-                      <Text className="text-2xl font-black text-center text-white" numberOfLines={2}>
+                      <Text className="text-xl font-black text-center text-white" numberOfLines={2}>
                         {currentTrack.title}
                       </Text>
                       <Text className="mt-2 text-lg font-medium text-center text-white/70">
@@ -189,15 +187,15 @@ export const FullPlayer = () => {
                         changeLyricsLanguage(currentTrack.id, lang.code);
                         setShowLangModal(false);
                       }}
-                      className={`flex-row items-center justify-between p-4 mx-4 my-1 rounded-xl ${isSelected ? 'bg-green-500/20' : ''}`}
+                      className={`flex-row items-center justify-between p-4 mx-4 my-1 rounded-xl ${isSelected ? 'bg-red-500/20' : ''}`}
                     >
                       <View>
-                        <Text className={`font-bold ${isSelected ? 'text-green-500' : 'text-white'}`}>
+                        <Text className={`font-bold ${isSelected ? 'text-red-500' : 'text-white'}`}>
                           {lang.name}
                         </Text>
                         <Text className="text-xs text-white/40">{lang.code.toUpperCase()}</Text>
                       </View>
-                      {isSelected && <CheckCircle size={20} color="#22c55e" />}
+                      {isSelected && <CheckCircle size={20} color="#ef4444" />}
                     </TouchableOpacity>
                   );
                 })}

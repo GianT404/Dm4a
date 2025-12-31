@@ -51,16 +51,15 @@ function MainLayout() {
       <MiniPlayer />
       <FullPlayer />
 
-      {/* 👇 BOTTOM TAB BAR ĐÃ FIX */}
       <View 
         className="absolute left-0 right-0 flex-row bg-[#121212] border-t border-zinc-900"
         style={{ 
           bottom: 0, // Luôn dính đáy
-          paddingBottom: Platform.OS === 'ios' ? insets.bottom : insets.bottom + 5, // Cộng thêm inset bottom
-          height: 60 + (insets.bottom > 0 ? insets.bottom : 20), // Tự động tăng chiều cao
+          paddingBottom: Platform.OS === 'ios' ? insets.bottom : insets.bottom + 5, 
+          height: 60 + (insets.bottom > 0 ? insets.bottom : 20), 
           paddingTop: 10,
           paddingHorizontal: 24,
-          alignItems: 'flex-start' // Căn icon lên trên chút
+          alignItems: 'flex-start' 
         }}
       >
         <TouchableOpacity 

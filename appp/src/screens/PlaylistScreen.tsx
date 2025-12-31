@@ -52,7 +52,7 @@ const handleShufflePress = () => {
       
       {/* Header Title */}
       <Text className="my-4 text-2xl font-bold text-white font-roboto-bold">
-        Thư viện
+        Playlist
       </Text>
 
       {/* 3️⃣ Thanh Search Bar */}
@@ -94,9 +94,10 @@ const handleShufflePress = () => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled" // Để bấm vào list không bị ẩn bàn phím ngay lập tức
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={() => (
           <View className="items-center justify-center mt-10">
-            <Text className="text-zinc-500 font-roboto-regular">Không tìm thấy bài hát nào bro ơi :(</Text>
+            <Text className="text-zinc-500 font-roboto-regular">Kiếm qq gì đấy!?</Text>
           </View>
         )}
         renderItem={({ item }) => (

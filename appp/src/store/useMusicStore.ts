@@ -29,6 +29,9 @@ interface MusicState {
   duration: number;
   isFullPlayerVisible: boolean;
   isShuffle: boolean; 
+  searchQuery: string;       
+  searchResults: any[];       
+  trendingData: any[];
   toggleShuffle: () => void;
   setFullPlayerVisible: (visible: boolean) => void;
   setPlayState: (isPlaying: boolean) => void;
@@ -37,6 +40,9 @@ interface MusicState {
   setLyrics: (lyrics: LyricLine[]) => void;
   addToPlaylist: (track: Partial<Track>) => Promise<void>;
   removeFromPlaylist: (id: string) => void;
+  setSearchQuery: (query: string) => void;
+  setSearchResults: (results: any[]) => void;
+  setTrendingData: (data: any[]) => void;
   playNext: () => void;
   playPrev: () => void;
   
@@ -53,7 +59,12 @@ export const useMusicStore = create<MusicState>()(
       position: 0,
       duration: 1,
       isFullPlayerVisible: false,
-
+      searchQuery: '',
+      searchResults: [],
+      trendingData: [],
+      setSearchQuery: (query) => set({ searchQuery: query }),
+      setSearchResults: (results) => set({ searchResults: results }),
+      setTrendingData: (data) => set({ trendingData: data }),
       setFullPlayerVisible: (v) => set({ isFullPlayerVisible: v }),
       setPlayState: (v) => set({ isPlaying: v }),
       setTrack: (t) => set({ currentTrack: t }),
