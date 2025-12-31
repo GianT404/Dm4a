@@ -28,6 +28,7 @@ export const TrackItem = ({ track, onPress, onRemove, isCurrent, hideStatus }: a
         {!hideStatus && track.status === 'ready' && (
            <CheckCircle size={16} color="#FFFFFF" />
         )}
+        
         {onRemove && (
           <TouchableOpacity onPress={onRemove} className="ml-4 opacity-20">
             <Trash2 size={16} color="#FFFFFF" />

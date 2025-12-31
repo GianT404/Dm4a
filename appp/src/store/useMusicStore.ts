@@ -15,9 +15,9 @@ interface Track {
   localAudioUri?: string;
   localLyricsUri?: string;
   status: 'downloading' | 'ready' | 'error';
-  // 🔥 MỚI: Lưu danh sách ngôn ngữ có sẵn (VD: [{code: 'vi', name: 'Vietnamese'}])
   availableLyrics?: { code: string; name: string }[]; 
   currentLang?: string; // Ngôn ngữ đang chọn
+
 }
 
 interface MusicState {
@@ -28,7 +28,8 @@ interface MusicState {
   position: number;
   duration: number;
   isFullPlayerVisible: boolean;
-
+  isShuffle: boolean; 
+  toggleShuffle: () => void;
   setFullPlayerVisible: (visible: boolean) => void;
   setPlayState: (isPlaying: boolean) => void;
   setTrack: (track: Track) => void;
@@ -58,7 +59,8 @@ export const useMusicStore = create<MusicState>()(
       setTrack: (t) => set({ currentTrack: t }),
       setProgress: (p, d) => set({ position: p, duration: d }),
       setLyrics: (l) => set({ lyrics: l }),
-
+      isShuffle: false, 
+  toggleShuffle: () => set((state) => ({ isShuffle: !state.isShuffle })),
       addToPlaylist: async (rawTrack) => {
         const { id } = rawTrack;
         if (!id || get().playlist.some(t => t.id === id)) return;

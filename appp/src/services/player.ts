@@ -46,7 +46,7 @@ export const PlayerService = {
         if (status.isLoaded) {
           store.setProgress(status.positionMillis, status.durationMillis || 0);
           if (status.didJustFinish) {
-             store.playNext();
+              PlayerService.playNext();
              setTimeout(() => {
                 const newTrack = useMusicStore.getState().currentTrack;
                 if(newTrack) PlayerService.playTrack(newTrack.id);
@@ -57,15 +57,15 @@ export const PlayerService = {
 
     } catch (e) { console.error('Play Error', e); }
   },
-  playNext: async () => {
-     const store = useMusicStore.getState();
-     store.playNext(); 
+  // playNext: async () => {
+  //    const store = useMusicStore.getState();
+  //    store.playNext(); 
      
-     const newTrack = useMusicStore.getState().currentTrack; 
-     if (newTrack) {
-        await PlayerService.playTrack(newTrack.id); 
-     }
-  },
+  //    const newTrack = useMusicStore.getState().currentTrack; 
+  //    if (newTrack) {
+  //       await PlayerService.playTrack(newTrack.id); 
+  //    }
+  // },
 
   playPrev: async () => {
      const store = useMusicStore.getState();
@@ -76,6 +76,31 @@ export const PlayerService = {
         await PlayerService.playTrack(newTrack.id);
      }
   },
+playNext: async () => {
+  const { playlist, currentTrack, isShuffle } = useMusicStore.getState();
+  if (!currentTrack || playlist.length === 0) return;
+
+  let nextTrack;
+
+  if (isShuffle) {
+    let remainingTracks = playlist.filter(t => t.id !== currentTrack.id);
+    if (remainingTracks.length === 0) {
+      nextTrack = currentTrack;
+    } else {
+      const randomIndex = Math.floor(Math.random() * remainingTracks.length);
+      nextTrack = remainingTracks[randomIndex];
+    }
+  } else {
+    const currentIndex = playlist.findIndex((t) => t.id === currentTrack.id);
+    const nextIndex = (currentIndex + 1) % playlist.length;
+    nextTrack = playlist[nextIndex];
+  }
+
+  if (nextTrack) {
+    useMusicStore.getState().setTrack(nextTrack); 
+    await PlayerService.playTrack(nextTrack.id);
+  }
+},
   togglePlay: async () => {
     const store = useMusicStore.getState();
     if (soundObject) {
