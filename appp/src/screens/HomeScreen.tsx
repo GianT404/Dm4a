@@ -52,7 +52,6 @@ export default function HomeScreen() {
     }
   };
 
-  // 👇 Component Item Trending đã nâng cấp Logic Icon
   const TrendingItem = ({ item }: { item: any }) => {
     // Check xem bài này đang ở trạng thái nào trong playlist
     const trackInList = playlist.find(t => t.id === item.id);
@@ -67,10 +66,8 @@ export default function HomeScreen() {
         <View className="relative shadow-lg shadow-green-500/50">
           <Image 
             source={{ uri: item.thumbnail }} 
-            className="w-24 h-24 border-2 border-green-500 rounded-full" 
+            className="w-24 h-24 border-2 border-green-500 rounded-xl" 
           />
-          
-          {/* 👇 Khu vực xử lý Icon trạng thái
           <View className="absolute bottom-0 right-0 p-1 bg-black rounded-full">
             {isDownloading ? (
                // 1. Nếu đang tải -> Hiện vòng xoay loading
@@ -82,7 +79,7 @@ export default function HomeScreen() {
                // 3. Nếu chưa có -> Hiện nút Play
                <PlayCircle size={20} color="#22c55e" fill="black" />
             )}
-          </View> */}
+          </View>
         </View>
 
         <Text numberOfLines={1} className="mt-3 text-sm font-bold text-center text-green-400">
@@ -97,30 +94,12 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 px-4 pt-4 bg-[#121212]">
-      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[2]}>
+      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[1]}>
         
         <Text className="my-6 text-2xl font-black tracking-widest text-white uppercase">
-          Dm4a <Text className="text-green-500">Music</Text>
+          D<Text className="text-[#22c55e]">M4A</Text>
         </Text>
-
-        {/* SECTION: TOP TRENDING */}
-        {trending.length > 0 && (
-          <View className="mb-8">
-            <Text className="mb-4 text-xl font-bold text-white">
-              🔥 Top Thịnh Hành
-            </Text>
-            <FlatList
-              horizontal
-              data={trending}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => <TrendingItem item={item} />}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingRight: 20 }}
-            />
-          </View>
-        )}
-
-        {/* Thanh tìm kiếm */}
+                {/* Thanh tìm kiếm */}
         <View className="pb-4 bg-[#121212]">
             <View className="flex-row items-center px-4 py-3 bg-white rounded-xl">
                 <Search color="#000000" size={20} />
@@ -135,7 +114,22 @@ export default function HomeScreen() {
                 />
             </View>
         </View>
-
+        {/* SECTION: TOP TRENDING */}
+        {trending.length > 0 && (
+          <View className="mb-8">
+            <Text className="mb-4 text-xl font-bold text-white">
+              Thử xem biết đâu nghiện
+            </Text>
+            <FlatList
+              horizontal
+              data={trending}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => <TrendingItem item={item} />}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingRight: 20 }}
+            />
+          </View>
+        )}
         {/* Kết quả tìm kiếm */}
         {loading ? (
             <ActivityIndicator size="large" color="#22c55e" className="mt-10" /> 

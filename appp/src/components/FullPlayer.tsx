@@ -1,14 +1,14 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, Modal, Dimensions, FlatList, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Modal, Dimensions, FlatList, ScrollView, StatusBar } from 'react-native';
 import { useMusicStore } from '../store/useMusicStore';
 import { PlayerService } from '../services/player';
-import { ChevronDown, Play, Pause, SkipBack, SkipForward, MessageSquare, X, CaptionsIcon } from 'lucide-react-native';
+import { ChevronDown, Play, Pause, SkipBack, SkipForward, X, CaptionsIcon, CheckCircle } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
 import { LyricsView } from './LyricsView';
+import { LinearGradient } from 'expo-linear-gradient'; 
 
 const { width, height } = Dimensions.get('window');
 
-// Helper format thời gian
 const formatTime = (millis: number) => {
   if (!millis || millis < 0) return '00:00';
   const minutes = Math.floor(millis / 60000);
@@ -32,15 +32,33 @@ export const FullPlayer = () => {
   if (!currentTrack) return null;
 
   return (
-    <Modal visible={isFullPlayerVisible} animationType="slide">
-      <View className="flex-1 pt-4 bg-[#121212]">
+    <Modal visible={isFullPlayerVisible} animationType="slide" statusBarTranslucent>
+      <View className="flex-1 bg-black">
+        <StatusBar barStyle="light-content" />
+
+        {/* 🖼️ BACKGROUND IMAGE FULL SCREEN (Chỉ hiện ở tab Artwork) */}
+        {currentPage === 0 && (
+          <View className="absolute inset-0 w-full h-full">
+            <Image
+              source={{ uri: currentTrack.thumbnail }}
+              className="w-full h-full opacity-60" 
+              resizeMode="cover"
+              blurRadius={10} // Làm mờ nhẹ background để nghệ hơn
+            />
+            {/* Lớp phủ đen để chữ dễ đọc */}
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.8)', '#000000']}
+              style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%' }}
+            />
+          </View>
+        )}
 
         {/* HEADER */}
-        <View className="flex-row items-center justify-between px-8 mb-4">
+        <View className="z-10 flex-row items-center justify-between px-6 mt-12 mb-4">
           <TouchableOpacity onPress={() => setFullPlayerVisible(false)}>
-            <ChevronDown color="white" size={28} />
+            <ChevronDown color="white" size={32} />
           </TouchableOpacity>
-          <Text className="text-zinc-600 font-black text-[10px] tracking-[6px]">
+          <Text className="text-white/80 font-bold text-[10px] tracking-[4px]">
             {currentPage === 0 ? 'NOW PLAYING' : 'LYRICS'}
           </Text>
           {(currentTrack.availableLyrics && currentTrack.availableLyrics.length > 0) ? (
@@ -52,7 +70,7 @@ export const FullPlayer = () => {
           )}
         </View>
 
-        {/* CONTENT  */}
+        {/* CONTENT SWIPER */}
         <View className="flex-1">
           <FlatList
             data={pages}
@@ -61,29 +79,33 @@ export const FullPlayer = () => {
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item) => item.id}
             onViewableItemsChanged={onViewableItemsChanged}
-            viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
             renderItem={({ item }) => {
               if (item.id === 'artwork') {
                 return (
-                  <View style={{ width }} className="items-center justify-center px-8">
+                  <View style={{ width }} className="items-center justify-center">
+                    {/* Ảnh chính giữa (Album Art) */}
                     <Image
                       source={{ uri: currentTrack.thumbnail }}
-                      style={{ width: width - 80, height: width - 80 }}
-                      className="border rounded-lg border-zinc-900"
+                      style={{ width: width - 60, height: width - 60 }}
+                      className="shadow-2xl rounded-xl"
+                      resizeMode="cover"
                     />
-                    <View className="items-start w-full px-4 mt-12">
-                      <Text className="text-xl font-black leading-none tracking-tighter text-white" numberOfLines={2}>
+                    
+                    {/* Thông tin bài hát */}
+                    <View className="items-center w-full px-8 mt-10">
+                      <Text className="text-2xl font-black text-center text-white" numberOfLines={2}>
                         {currentTrack.title}
                       </Text>
-                      <Text className="mt-3 text-lg italic font-medium lowercase text-zinc-600">
+                      <Text className="mt-2 text-lg font-medium text-center text-white/70">
                         {currentTrack.author}
                       </Text>
                     </View>
                   </View>
                 );
               }
+              // Lyrics View (Nền đen cho dễ đọc)
               return (
-                <View style={{ width }} className="px-8 pt-4 pb-4">
+                <View style={{ width }} className="px-6 pt-4 bg-black/40">
                   <LyricsView />
                 </View>
               );
@@ -92,52 +114,56 @@ export const FullPlayer = () => {
         </View>
 
         {/* PAGINATION DOTS */}
-        <View className="flex-row items-center justify-center gap-2 mb-8 space-x-2">
-          <View className={`w-2 h-2 rounded-full ${currentPage === 0 ? 'bg-white' : 'bg-zinc-800'}`} />
-          <View className={`w-2 h-2 rounded-full ${currentPage === 1 ? 'bg-white' : 'bg-zinc-800'}`} />
+        <View className="flex-row items-center justify-center gap-2 mb-6">
+          <View className={`w-2 h-2 rounded-full ${currentPage === 0 ? 'bg-white' : 'bg-white/20'}`} />
+          <View className={`w-2 h-2 rounded-full ${currentPage === 1 ? 'bg-white' : 'bg-white/20'}`} />
         </View>
 
-        {/* CONTROLS AREA  */}
-        <View className="px-8 pb-16 bg-[#121212]">
+        {/* CONTROLS */}
+        <View className="px-8 pb-12">
+          {/* Slider */}
           <Slider
             style={{ width: '100%', height: 40 }}
             minimumValue={0} maximumValue={duration} value={position}
-            minimumTrackTintColor="#FFFFFF" maximumTrackTintColor="#fff"
+            minimumTrackTintColor="#FFFFFF" maximumTrackTintColor="rgba(255,255,255,0.3)"
             thumbTintColor="#FFFFFF"
             onSlidingComplete={PlayerService.seekTo}
           />
-
-          <View className="flex-row justify-between px-1 mt-1">
-            <Text className="text-zinc-500 text-[10px] font-mono font-bold tracking-widest">
+          
+          {/* Time Labels */}
+          <View className="flex-row justify-between px-1 -mt-2">
+            <Text className="text-white/60 text-[10px] font-mono font-bold">
               {formatTime(position)}
             </Text>
-            <Text className="text-zinc-500 text-[10px] font-mono font-bold tracking-widest">
+            <Text className="text-white/60 text-[10px] font-mono font-bold">
               {formatTime(duration)}
             </Text>
           </View>
 
-          <View className="flex-row items-center justify-between px-4 mt-6">
+          {/* Buttons */}
+          <View className="flex-row items-center justify-between px-4 mt-4">
             <TouchableOpacity onPress={() => PlayerService.playPrev()}>
-              <SkipBack size={28} color="white" fill="white" />
+              <SkipBack size={32} color="white" fill="white" />
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={PlayerService.togglePlay}
-              className="items-center justify-center w-20 h-20 bg-white rounded-full"
+              className="items-center justify-center w-20 h-20 bg-white rounded-full shadow-lg shadow-white/20"
             >
               {isPlaying ? (
-                <Pause size={32} color="black" fill="black" />
+                <Pause size={36} color="black" fill="black" />
               ) : (
-                <Play size={32} color="black" fill="black" className="ml-1" />
+                <Play size={36} color="black" fill="black" className="ml-1" />
               )}
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => PlayerService.playNext()}>
-              <SkipForward size={28} color="white" fill="white" />
+              <SkipForward size={32} color="white" fill="white" />
             </TouchableOpacity>
           </View>
         </View>
 
+        {/* MODAL LANGUAGE (Giữ nguyên) */}
         <Modal
           visible={showLangModal}
           transparent
@@ -145,29 +171,17 @@ export const FullPlayer = () => {
           onRequestClose={() => setShowLangModal(false)}
         >
           <View className="items-center justify-center flex-1 px-6 bg-black/80">
-            <View className="w-full max-w-md overflow-hidden shadow-2xl bg-black-900 rounded-2xl">
-              {/* Header */}
-              <View className="flex-row items-center justify-between p-5">
-                <Text className="text-lg font-semibold text-white">
-                  Chọn ngôn ngữ phụ đề
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setShowLangModal(false)}
-                  className="items-center justify-center w-10 h-10 bg-gray-800 rounded-full"
-                  activeOpacity={0.7}
-                >
-                  <X size={20} color="#9CA3AF" />
+            <View className="w-full max-w-md overflow-hidden bg-zinc-900 rounded-2xl">
+              <View className="flex-row items-center justify-between p-5 border-b border-white/10">
+                <Text className="text-lg font-bold text-white">Chọn ngôn ngữ</Text>
+                <TouchableOpacity onPress={() => setShowLangModal(false)}>
+                  <X size={24} color="white" />
                 </TouchableOpacity>
               </View>
 
-              {/* Language List */}
-              <ScrollView
-                className="max-h-96"
-                showsVerticalScrollIndicator={false}
-              >
+              <ScrollView className="max-h-96">
                 {currentTrack.availableLyrics?.map((lang) => {
                   const isSelected = currentTrack.currentLang === lang.code;
-
                   return (
                     <TouchableOpacity
                       key={lang.code}
@@ -175,40 +189,19 @@ export const FullPlayer = () => {
                         changeLyricsLanguage(currentTrack.id, lang.code);
                         setShowLangModal(false);
                       }}
-                      className={`mx-5 my-1.5 overflow-hidden rounded-xl ${isSelected
-                          ? 'bg-blue-500/10 border border-blue-500/20'
-                          : 'active:bg-gray-800'
-                        }`}
-                      activeOpacity={0.8}
+                      className={`flex-row items-center justify-between p-4 mx-4 my-1 rounded-xl ${isSelected ? 'bg-green-500/20' : ''}`}
                     >
-                      <View className="p-4">
-                        <View className="flex-row items-center justify-between">
-                          <Text
-                            className={`text-base font-medium ${isSelected ? 'text-blue-400' : 'text-gray-200'
-                              }`}
-                          >
-                            {lang.name}
-                          </Text>
-                        </View>
-
-                        {lang.code && (
-                          <Text className={`mt-1 text-sm ${isSelected ? 'text-blue-400/70' : 'text-gray-400'
-                            }`}>
-                            {lang.code.toUpperCase()}
-                          </Text>
-                        )}
+                      <View>
+                        <Text className={`font-bold ${isSelected ? 'text-green-500' : 'text-white'}`}>
+                          {lang.name}
+                        </Text>
+                        <Text className="text-xs text-white/40">{lang.code.toUpperCase()}</Text>
                       </View>
+                      {isSelected && <CheckCircle size={20} color="#22c55e" />}
                     </TouchableOpacity>
                   );
                 })}
               </ScrollView>
-
-              {/* Footer Note */}
-              <View className="p-4 border-t border-gray-800">
-                <Text className="text-xs text-center text-gray-500">
-                  {currentTrack.availableLyrics?.length || 0} ngôn ngữ có sẵn
-                </Text>
-              </View>
             </View>
           </View>
         </Modal>
