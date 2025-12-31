@@ -4,7 +4,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { Search, Library, Music } from 'lucide-react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, RobotoMono_400Regular, RobotoMono_700Bold } from '@expo-google-fonts/roboto-mono';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView, GestureDetector, Gesture } from 'react-native-gesture-handler'; // 👈 Import thêm Gesture
 
 import HomeScreen from './src/screens/HomeScreen';
 import PlaylistScreen from './src/screens/PlaylistScreen';
@@ -15,7 +15,7 @@ import "./global.css";
 
 SplashScreen.preventAutoHideAsync();
 
-const { width } = Dimensions.get('window'); // Lấy chiều rộng màn hình
+const { width } = Dimensions.get('window');
 
 const setGlobalFont = () => {
   const fontConfig = { fontFamily: 'RobotoMono_400Regular' };
@@ -38,8 +38,13 @@ function MainLayout() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(0)).current;
   const prevCount = useRef(playlist.length);
+  
+  // Slide Animation
   const slideAnim = useRef(new Animated.Value(0)).current; 
+
+  // Hàm chuyển tab
   const switchTab = (newTab: 'home' | 'library') => {
+    if (tab === newTab) return; // Đang ở tab đó rồi thì thôi
     setTab(newTab);
     Animated.timing(slideAnim, {
       toValue: newTab === 'home' ? 0 : 1, 
@@ -47,6 +52,22 @@ function MainLayout() {
       useNativeDriver: true,
     }).start();
   };
+
+  // 👇 GESTURE: Xử lý vuốt tay
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-20, 20]) // Chỉ kích hoạt khi vuốt ngang > 20px (tránh nhầm với cuộn dọc)
+    .onEnd((e) => {
+      // Vuốt sang trái (velocityX < 0) -> Qua Library
+      if (e.velocityX < -500 && tab === 'home') {
+        // Cần runOnJS vì state update phải ở luồng JS
+        switchTab('library');
+      }
+      // Vuốt sang phải (velocityX > 0) -> Về Home
+      else if (e.velocityX > 500 && tab === 'library') {
+        switchTab('home');
+      }
+    })
+    .runOnJS(true); // Quan trọng: Cho phép chạy hàm JS (switchTab) bên trong gesture
 
   // Trigger Animation +1 Badge
   useEffect(() => {
@@ -84,32 +105,34 @@ function MainLayout() {
         translucent 
       />
 
-      {/* SLIDING CONTAINER: Chứa cả 2 màn hình nằm ngang */}
-      <View className="flex-1 overflow-hidden">
-        <Animated.View 
-          style={{ 
-            flexDirection: 'row', 
-            width: width * 2, 
-            height: '100%',
-            transform: [
-              {
-                translateX: slideAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, -width], 
-                })
-              }
-            ]
-          }}
-        >
-          <View style={{ width: width, height: '100%', paddingBottom: 80 + insets.bottom }}>
-            <HomeScreen />
-          </View>
+      {/* 👇 Bọc Container trong GestureDetector để nhận diện vuốt */}
+      <GestureDetector gesture={panGesture}>
+        <View className="flex-1 overflow-hidden">
+            <Animated.View 
+            style={{ 
+                flexDirection: 'row', 
+                width: width * 2, 
+                height: '100%',
+                transform: [
+                {
+                    translateX: slideAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, -width], 
+                    })
+                }
+                ]
+            }}
+            >
+            <View style={{ width: width, height: '100%', paddingBottom: 80 + insets.bottom }}>
+                <HomeScreen />
+            </View>
 
-          <View style={{ width: width, height: '100%', paddingBottom: 80 + insets.bottom }}>
-            <PlaylistScreen />
-          </View>
-        </Animated.View>
-      </View>
+            <View style={{ width: width, height: '100%', paddingBottom: 80 + insets.bottom }}>
+                <PlaylistScreen />
+            </View>
+            </Animated.View>
+        </View>
+      </GestureDetector>
 
       <MiniPlayer />
       <FullPlayer />

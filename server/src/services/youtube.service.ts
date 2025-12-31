@@ -178,9 +178,6 @@ const vibes = [
             "tuyển tập", "liên khúc", "tổng hợp", "collection", "bảng xếp hạng",
             "album", "full", "list", "playlist", 
             "top 10", "top 20", "top 50", "top 100", "top 150", "top hit", "Top", "TOP",
-            "remix", "remixed", "remix version", 
-            "instrumental", "karaoke version", "beat", "nhạc beat", 
-            "lyric video", "lyrics", "lyric",
             "mashup", "cover", "karaoke", "nhạc chế", "parody", 
             "ver", "version", 
             "review", "reaction", "phim ca nhạc", "trực tiếp", "live", "mix", "Hot Trend"

@@ -15,7 +15,7 @@ interface Track {
   localAudioUri?: string;
   localLyricsUri?: string;
   status: 'downloading' | 'ready' | 'error';
-  availableLyrics?: { code: string; name: string }[]; 
+  availableLyrics?: { code: string; name: string ;url: string}[]; 
   currentLang?: string; // Ngôn ngữ đang chọn
 
 }
@@ -95,7 +95,8 @@ const availableLyrics = tracks.map((t: any) => {
 
     return {
         code: t.code,
-        name: String(langName) // Ép cứng thành chuỗi cho an toàn tuyệt đối
+        name: String(langName),
+        url: `${API_URL}/download-lyrics?id=${id}&lang=${t.code}`
     };
 });
 
