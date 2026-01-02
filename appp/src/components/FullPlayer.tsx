@@ -101,7 +101,6 @@ export const FullPlayer = () => {
                   </View>
                 );
               }
-              // Lyrics View (Nền đen cho dễ đọc)
               return (
                 <View style={{ width }} className="px-6 pt-4 bg-black/40">
                   <LyricsView />
