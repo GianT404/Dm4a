@@ -1,4 +1,6 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
+// Thư viện quản lý điều khiển media trên màn hình khóa / notification
+import MusicControl from 'react-native-music-control';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useMusicStore } from '../store/useMusicStore';
 import { parseVTT } from '../utils/lyricsParser';
@@ -49,9 +51,41 @@ export const PlayerService = {
       store.setTrack(track);
       store.setPlayState(true);
 
+      // Cấu hình thông tin hiển thị trên màn hình khóa / notification
+      try {
+        MusicControl.setNowPlaying({
+          title: track.title,
+          artwork: track.thumbnail || undefined,
+          artist: track.author || undefined,
+          duration: undefined,
+          elapsedTime: 0,
+        });
+
+        MusicControl.enableControl('play', true);
+        MusicControl.enableControl('pause', true);
+        MusicControl.enableControl('nextTrack', true);
+        MusicControl.enableControl('previousTrack', true);
+        MusicControl.enableControl('stop', true);
+
+        MusicControl.on('play', async () => { await PlayerService.togglePlay(); });
+        MusicControl.on('pause', async () => { await PlayerService.togglePlay(); });
+        MusicControl.on('nextTrack', async () => { await PlayerService.playNext(); });
+        MusicControl.on('previousTrack', async () => { await PlayerService.playPrev(); });
+        MusicControl.on('stop', async () => { await PlayerService.stop(); });
+      } catch (e) {
+        console.warn('MusicControl unavailable', e);
+      }
+
       sound.setOnPlaybackStatusUpdate((status) => {
         if (status.isLoaded) {
           store.setProgress(status.positionMillis, status.durationMillis || 0);
+          try {
+            MusicControl.updatePlayback({
+              state: status.isPlaying ? MusicControl.STATE_PLAYING : MusicControl.STATE_PAUSED,
+              elapsedTime: (status.positionMillis || 0) / 1000,
+              duration: (status.durationMillis || 0) / 1000,
+            });
+          } catch (e) {}
           if (status.didJustFinish) {
               PlayerService.playNext();
              setTimeout(() => {
@@ -114,14 +148,29 @@ playNext: async () => {
       if (store.isPlaying) {
         await soundObject.pauseAsync();
         store.setPlayState(false);
+        try { MusicControl.updatePlayback({ state: MusicControl.STATE_PAUSED, elapsedTime: (await soundObject.getStatusAsync()).positionMillis / 1000 }); } catch(e){}
       } else {
         await soundObject.playAsync();
         store.setPlayState(true);
+        try { MusicControl.updatePlayback({ state: MusicControl.STATE_PLAYING, elapsedTime: (await soundObject.getStatusAsync()).positionMillis / 1000 }); } catch(e){}
       }
     }
   },
   
   seekTo: async (ms: number) => {
       if (soundObject) await soundObject.setPositionAsync(ms);
+  }
+,
+  stop: async () => {
+    const store = useMusicStore.getState();
+    try {
+      if (soundObject) {
+        await soundObject.unloadAsync();
+        soundObject = null;
+      }
+      store.setPlayState(false);
+      store.setTrack(null as any);
+      try { MusicControl.resetNowPlaying(); } catch (e) {}
+    } catch (e) { console.error('Stop Error', e); }
   }
 };

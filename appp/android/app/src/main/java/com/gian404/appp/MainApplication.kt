@@ -1,4 +1,4 @@
-package com.dm4a.dm4a
+package com.gian404.appp
 
 import android.app.Application
 import android.content.res.Configuration

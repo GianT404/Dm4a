@@ -195,9 +195,20 @@ export default function App() {
   });
 
   useEffect(() => {
+    let timeout: any = null;
     if (fontsLoaded) {
       SplashScreen.hideAsync();
+    } else {
+      // Fallback: nếu fonts chưa load trong 7s thì ẩn splash để tránh dừng mãi ở splash
+      timeout = setTimeout(() => {
+        SplashScreen.hideAsync();
+        console.warn('SplashScreen hide fallback triggered — fonts not loaded within timeout');
+      }, 7000);
     }
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
   }, [fontsLoaded]);
 
   return (

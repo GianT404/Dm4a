@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.dm4a.dm4a'
+    namespace 'com.gian404.appp'
     defaultConfig {
-        applicationId 'com.dm4a.dm4a'
+        applicationId 'com.gian404.appp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

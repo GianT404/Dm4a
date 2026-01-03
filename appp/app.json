@@ -14,18 +14,24 @@
     },
     "ios": {
       "supportsTablet": true,
-        "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
-      "permissions": ["WAKE_LOCK"],
+      "permissions": [
+        "WAKE_LOCK",
+        "WAKE_LOCK"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.gian404.appp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
