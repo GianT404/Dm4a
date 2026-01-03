@@ -4,14 +4,16 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { Search, Library, Music } from 'lucide-react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, RobotoMono_400Regular, RobotoMono_700Bold } from '@expo-google-fonts/roboto-mono';
-import { GestureHandlerRootView, GestureDetector, Gesture } from 'react-native-gesture-handler'; // 👈 Import thêm Gesture
+import { GestureHandlerRootView, GestureDetector, Gesture } from 'react-native-gesture-handler'; 
 
 import HomeScreen from './src/screens/HomeScreen';
 import PlaylistScreen from './src/screens/PlaylistScreen';
 import { MiniPlayer } from './src/components/MiniPlayer';
 import { FullPlayer } from './src/components/FullPlayer';
 import { useMusicStore } from './src/store/useMusicStore';
-import "./global.css";
+import PlayerControls from './src/components/PlayerControls';
+import './global.css';
+import AudioService from './src/services/AudioService';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -197,8 +199,6 @@ export default function App() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
-
-  if (!fontsLoaded) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

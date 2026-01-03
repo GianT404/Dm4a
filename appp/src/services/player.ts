@@ -1,4 +1,4 @@
-import { Audio } from 'expo-av';
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useMusicStore } from '../store/useMusicStore';
 import { parseVTT } from '../utils/lyricsParser';
@@ -31,7 +31,14 @@ export const PlayerService = {
       }
 
       console.log('Playing:', track.localAudioUri);
-      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true }); // Quan trọng cho iOS
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+        shouldDuckAndroid: false,
+      });
       
       const { sound } = await Audio.Sound.createAsync(
         { uri: track.localAudioUri },

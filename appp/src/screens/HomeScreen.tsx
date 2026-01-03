@@ -1,27 +1,48 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, TextInput, FlatList, ActivityIndicator, Text, ScrollView, Image, TouchableOpacity, RefreshControl } from 'react-native'; 
+import {
+  View,
+  TextInput,
+  FlatList,
+  ActivityIndicator,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  RefreshControl,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Search, CheckCircle } from 'lucide-react-native';
+
 import { getTrending, searchVideo } from '../services/api';
 import { useMusicStore } from '../store/useMusicStore';
 import { TrackItem } from '../components/TrackItem';
-import { Icon, Search, CheckCircle } from 'lucide-react-native'; 
+import PlayerControls from '../components/PlayerControls';
 import { PlayerService } from '../services/player';
 
 export default function HomeScreen() {
-  const { 
-    searchQuery, setSearchQuery, 
-    searchResults, setSearchResults, 
-    trendingData, setTrendingData,
-    addToPlaylist, playlist 
+  const {
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    setSearchResults,
+    trendingData,
+    setTrendingData,
+    addToPlaylist,
+    playlist,
   } = useMusicStore();
 
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  
+
+  // player UI state
+  const [currentTrack, setCurrentTrack] = useState<any>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  /* =========================
+      LOAD TRENDING
+  ========================= */
   useEffect(() => {
-    if (trendingData.length === 0) {
-        loadTrending();
-    }
+    if (trendingData.length === 0) loadTrending();
   }, []);
 
   const loadTrending = async () => {
@@ -29,117 +50,131 @@ export default function HomeScreen() {
       const data = await getTrending();
       setTrendingData(data);
     } catch (error) {
-      console.error("Lỗi load trending:", error);
+      console.error('Lỗi load trending:', error);
     }
   };
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true); 
+    setRefreshing(true);
     setSearchResults([]);
-    await loadTrending(); 
+    await loadTrending();
     setRefreshing(false);
   }, []);
 
+  /* =========================
+      SEARCH
+  ========================= */
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setLoading(true);
     try {
       const data = await searchVideo(searchQuery);
       setSearchResults(data);
-    } catch (err) { console.error(err); } 
-    finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
+  /* =========================
+      PLAY HANDLER
+  ========================= */
   const handlePlayNow = async (item: any) => {
     const existingTrack = playlist.find(t => t.id === item.id);
 
-    if (existingTrack && existingTrack.status === 'ready') {
+    if (existingTrack?.status === 'ready') {
       await PlayerService.playTrack(existingTrack.id);
+      setCurrentTrack(existingTrack);
+      setIsPlaying(true);
       return;
     }
 
     await addToPlaylist(item);
 
-    const updatedTrack = useMusicStore.getState().playlist.find(t => t.id === item.id);
+    const updatedTrack = useMusicStore
+      .getState()
+      .playlist.find(t => t.id === item.id);
+
     if (updatedTrack?.status === 'ready') {
-       await PlayerService.playTrack(item.id);
+      await PlayerService.playTrack(updatedTrack.id);
+      setCurrentTrack(updatedTrack);
+      setIsPlaying(true);
     }
   };
+
+  /* =========================
+      TRENDING ITEM
+  ========================= */
   const TrendingItem = ({ item }: { item: any }) => {
     const trackInList = playlist.find(t => t.id === item.id);
     const isDownloading = trackInList?.status === 'downloading';
     const isExists = !!trackInList;
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={() => handlePlayNow(item)}
-        className="items-center mr-5 w-28" 
+        className="items-center mr-5 w-28"
       >
-        <View className="relative shadow-lg ">
-          <Image 
-            source={{ uri: item.thumbnail }} 
-            className="w-24 h-24 rounded-xl" 
+        <View className="relative shadow-lg">
+          <Image
+            source={{ uri: item.thumbnail }}
+            className="w-24 h-24 rounded-xl"
           />
           {(isDownloading || isExists) && (
-             <View className="absolute bottom-0 right-0 p-1 bg-black rounded-full">
-                {isDownloading ? (
-                   <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                   <CheckCircle size={20} color="#fff" fill="black" />
-                )}
-             </View>
+            <View className="absolute bottom-0 right-0 p-1 bg-black rounded-full">
+              {isDownloading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <CheckCircle size={20} color="#fff" />
+              )}
+            </View>
           )}
         </View>
-                  <Text numberOfLines={2} className="mt-1 text-xs text-center text-white">
+
+        <Text numberOfLines={2} className="mt-1 text-xs text-center text-white">
           {item.title}
         </Text>
         <Text numberOfLines={1} className="mt-3 text-xs font-bold text-center text-zinc-400">
           {item.author}
         </Text>
-
       </TouchableOpacity>
     );
   };
 
+  /* =========================
+      RENDER
+  ========================= */
   return (
     <SafeAreaView className="flex-1 px-4 pt-4 bg-[#121212]">
-      <ScrollView 
-        showsVerticalScrollIndicator={false} 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
         stickyHeaderIndices={[1]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#ef4444']} 
-            tintColor="#ef4444"  
-            title="Chờ 1 tí..." 
-            titleColor="#fff"
+            colors={['#ef4444']}
+            tintColor="#ef4444"
           />
         }
       >
         <Text className="my-6 text-2xl font-black tracking-widest text-white uppercase">
-          D<Text className="text-[#ef4444]">M4A</Text>
+          Đ<Text className="text-[#ef4444]">M4A</Text>
         </Text>
 
-        {/* Index 1: Search (Sticky) */}
         <View className="pb-4 bg-[#121212]">
-            <View className="flex-row items-center px-4 py-3 bg-white rounded-xl">
-                <Search color="#000000" size={20} />
-                <TextInput 
-                  className="flex-1 ml-3 text-base font-bold text-black"
-                  placeholder="Tìm bài hát, nghệ sĩ..." 
-                  placeholderTextColor="#52525b"
-                  returnKeyType="search" 
-                  value={searchQuery} 
-                  onChangeText={setSearchQuery} 
-                  onSubmitEditing={handleSearch}
-                />
-            </View>
+          <View className="flex-row items-center px-4 py-3 bg-white rounded-xl">
+            <Search color="#000" size={20} />
+            <TextInput
+              className="flex-1 ml-3 text-base font-bold text-black"
+              placeholder="Tìm bài hát, nghệ sĩ..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSubmitEditing={handleSearch}
+            />
+          </View>
         </View>
 
-        {/* Index 2: Content */}
-        <View> 
-          {/* TOP TRENDING */}
+        <View>
           {trendingData.length > 0 && (
             <View className="mb-8">
               <Text className="mb-4 text-xl font-bold text-white">
@@ -151,30 +186,43 @@ export default function HomeScreen() {
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => <TrendingItem item={item} />}
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingRight: 20 }}
               />
             </View>
           )}
 
-          {/* KẾT QUẢ TÌM KIẾM */}
           {loading ? (
-              <ActivityIndicator size="large" color="#22c55e" className="mt-10" /> 
+            <ActivityIndicator size="large" color="#22c55e" />
           ) : (
-              <View className="pb-24"> 
-                  {searchResults.map((item: any) => {
-                      const exists = playlist.find((t: any) => t.id === item.id);
-                      return (
-                          <TrackItem 
-                              key={item.id}
-                              track={exists || item} 
-                              onPress={() => handlePlayNow(item)} 
-                          />
-                      );
-                  })}
-              </View>
+            <View className={currentTrack ? 'pb-32' : 'pb-6'}>
+              {searchResults.map((item: any) => {
+                const exists = playlist.find(t => t.id === item.id);
+                return (
+                  <TrackItem
+                    key={item.id}
+                    track={exists || item}
+                    onPress={() => handlePlayNow(item)}
+                  />
+                );
+              })}
+            </View>
           )}
         </View>
       </ScrollView>
+
+      {/* {currentTrack && (
+        <PlayerControls
+          track={currentTrack}
+          isPlaying={isPlaying}
+          onPlay={async () => {
+            await PlayerService.togglePlay();
+            setIsPlaying(true);
+          }}
+          onPause={async () => {
+            await PlayerService.togglePlay();
+            setIsPlaying(false);
+          }}
+        />
+      )} */}
     </SafeAreaView>
   );
 }
