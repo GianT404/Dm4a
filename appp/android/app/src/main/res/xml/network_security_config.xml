@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+  <!-- Cho phép cleartext chỉ với localhost (dev server) và IP backend của bạn -->
+  <domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="false">localhost</domain>
+    <domain includeSubdomains="false">127.0.0.1</domain>
+  </domain-config>
+
+  <domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="false">34.63.75.191</domain>
+  </domain-config>
+
+  <!-- Mặc định: không cho phép cleartext cho host khác -->
+  <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

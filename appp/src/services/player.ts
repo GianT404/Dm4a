@@ -1,6 +1,5 @@
-import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
-// Thư viện quản lý điều khiển media trên màn hình khóa / notification
-import MusicControl from 'react-native-music-control';
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS, AVPlaybackStatus } from 'expo-av';
+import MusicControl, { Command } from 'react-native-music-control';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useMusicStore } from '../store/useMusicStore';
 import { parseVTT } from '../utils/lyricsParser';
@@ -41,37 +40,36 @@ export const PlayerService = {
         interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
         shouldDuckAndroid: false,
       });
-      
+
       const { sound } = await Audio.Sound.createAsync(
         { uri: track.localAudioUri },
         { shouldPlay: true }
       );
-      
+
       soundObject = sound;
       store.setTrack(track);
       store.setPlayState(true);
-
-      // Cấu hình thông tin hiển thị trên màn hình khóa / notification
       try {
         MusicControl.setNowPlaying({
           title: track.title,
           artwork: track.thumbnail || undefined,
           artist: track.author || undefined,
-          duration: undefined,
+          duration: undefined, 
           elapsedTime: 0,
         });
 
+        // Bật control
         MusicControl.enableControl('play', true);
         MusicControl.enableControl('pause', true);
         MusicControl.enableControl('nextTrack', true);
         MusicControl.enableControl('previousTrack', true);
         MusicControl.enableControl('stop', true);
+        MusicControl.on('play' as any, async () => { await PlayerService.togglePlay(); });
+        MusicControl.on('pause' as any, async () => { await PlayerService.togglePlay(); });
+        MusicControl.on('nextTrack' as any, async () => { await PlayerService.playNext(); });
+        MusicControl.on('previousTrack' as any, async () => { await PlayerService.playPrev(); });
+        MusicControl.on('stop' as any, async () => { await PlayerService.stop(); });
 
-        MusicControl.on('play', async () => { await PlayerService.togglePlay(); });
-        MusicControl.on('pause', async () => { await PlayerService.togglePlay(); });
-        MusicControl.on('nextTrack', async () => { await PlayerService.playNext(); });
-        MusicControl.on('previousTrack', async () => { await PlayerService.playPrev(); });
-        MusicControl.on('stop', async () => { await PlayerService.stop(); });
       } catch (e) {
         console.warn('MusicControl unavailable', e);
       }
@@ -82,85 +80,97 @@ export const PlayerService = {
           try {
             MusicControl.updatePlayback({
               state: status.isPlaying ? MusicControl.STATE_PLAYING : MusicControl.STATE_PAUSED,
-              elapsedTime: (status.positionMillis || 0) / 1000,
+              elapsedTime: status.positionMillis / 1000,
               duration: (status.durationMillis || 0) / 1000,
             });
           } catch (e) {}
+
           if (status.didJustFinish) {
-              PlayerService.playNext();
-             setTimeout(() => {
-                const newTrack = useMusicStore.getState().currentTrack;
-                if(newTrack) PlayerService.playTrack(newTrack.id);
-             }, 500);
+            PlayerService.playNext();
+            setTimeout(() => {
+              const newTrack = useMusicStore.getState().currentTrack;
+              if (newTrack) PlayerService.playTrack(newTrack.id);
+            }, 500);
           }
+        } else {
+            if (status.error) {
+                console.log(`Playback error: ${status.error}`);
+            }
         }
       });
 
     } catch (e) { console.error('Play Error', e); }
   },
-  // playNext: async () => {
-  //    const store = useMusicStore.getState();
-  //    store.playNext(); 
-     
-  //    const newTrack = useMusicStore.getState().currentTrack; 
-  //    if (newTrack) {
-  //       await PlayerService.playTrack(newTrack.id); 
-  //    }
-  // },
 
   playPrev: async () => {
-     const store = useMusicStore.getState();
-     store.playPrev();
-     
-     const newTrack = useMusicStore.getState().currentTrack;
-     if (newTrack) {
-        await PlayerService.playTrack(newTrack.id);
-     }
-  },
-playNext: async () => {
-  const { playlist, currentTrack, isShuffle } = useMusicStore.getState();
-  if (!currentTrack || playlist.length === 0) return;
+    const store = useMusicStore.getState();
+    store.playPrev();
 
-  let nextTrack;
-
-  if (isShuffle) {
-    let remainingTracks = playlist.filter(t => t.id !== currentTrack.id);
-    if (remainingTracks.length === 0) {
-      nextTrack = currentTrack;
-    } else {
-      const randomIndex = Math.floor(Math.random() * remainingTracks.length);
-      nextTrack = remainingTracks[randomIndex];
+    const newTrack = useMusicStore.getState().currentTrack;
+    if (newTrack) {
+      await PlayerService.playTrack(newTrack.id);
     }
-  } else {
-    const currentIndex = playlist.findIndex((t) => t.id === currentTrack.id);
-    const nextIndex = (currentIndex + 1) % playlist.length;
-    nextTrack = playlist[nextIndex];
-  }
+  },
 
-  if (nextTrack) {
-    useMusicStore.getState().setTrack(nextTrack); 
-    await PlayerService.playTrack(nextTrack.id);
-  }
-},
+  playNext: async () => {
+    const { playlist, currentTrack, isShuffle } = useMusicStore.getState();
+    if (!currentTrack || playlist.length === 0) return;
+
+    let nextTrack;
+
+    if (isShuffle) {
+      let remainingTracks = playlist.filter(t => t.id !== currentTrack.id);
+      if (remainingTracks.length === 0) {
+        nextTrack = currentTrack;
+      } else {
+        const randomIndex = Math.floor(Math.random() * remainingTracks.length);
+        nextTrack = remainingTracks[randomIndex];
+      }
+    } else {
+      const currentIndex = playlist.findIndex((t) => t.id === currentTrack.id);
+      const nextIndex = (currentIndex + 1) % playlist.length;
+      nextTrack = playlist[nextIndex];
+    }
+
+    if (nextTrack) {
+      useMusicStore.getState().setTrack(nextTrack);
+      await PlayerService.playTrack(nextTrack.id);
+    }
+  },
+
   togglePlay: async () => {
     const store = useMusicStore.getState();
     if (soundObject) {
-      if (store.isPlaying) {
-        await soundObject.pauseAsync();
-        store.setPlayState(false);
-        try { MusicControl.updatePlayback({ state: MusicControl.STATE_PAUSED, elapsedTime: (await soundObject.getStatusAsync()).positionMillis / 1000 }); } catch(e){}
-      } else {
-        await soundObject.playAsync();
-        store.setPlayState(true);
-        try { MusicControl.updatePlayback({ state: MusicControl.STATE_PLAYING, elapsedTime: (await soundObject.getStatusAsync()).positionMillis / 1000 }); } catch(e){}
+      const status = await soundObject.getStatusAsync();
+      
+      if (status.isLoaded) {
+          if (store.isPlaying) {
+            await soundObject.pauseAsync();
+            store.setPlayState(false);
+            try { 
+                MusicControl.updatePlayback({ 
+                    state: MusicControl.STATE_PAUSED, 
+                    elapsedTime: status.positionMillis / 1000 
+                }); 
+            } catch (e) {}
+          } else {
+            await soundObject.playAsync();
+            store.setPlayState(true);
+            try { 
+                MusicControl.updatePlayback({ 
+                    state: MusicControl.STATE_PLAYING, 
+                    elapsedTime: status.positionMillis / 1000 
+                }); 
+            } catch (e) {}
+          }
       }
     }
   },
-  
+
   seekTo: async (ms: number) => {
-      if (soundObject) await soundObject.setPositionAsync(ms);
-  }
-,
+    if (soundObject) await soundObject.setPositionAsync(ms);
+  },
+
   stop: async () => {
     const store = useMusicStore.getState();
     try {

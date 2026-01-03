@@ -5,6 +5,7 @@ import { Search, Library, Music } from 'lucide-react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, RobotoMono_400Regular, RobotoMono_700Bold } from '@expo-google-fonts/roboto-mono';
 import { GestureHandlerRootView, GestureDetector, Gesture } from 'react-native-gesture-handler'; 
+import * as Audio from 'expo-av';
 
 import HomeScreen from './src/screens/HomeScreen';
 import PlaylistScreen from './src/screens/PlaylistScreen';
@@ -16,6 +17,7 @@ import './global.css';
 import AudioService from './src/services/AudioService';
 
 SplashScreen.preventAutoHideAsync();
+
 
 const { width } = Dimensions.get('window');
 
@@ -210,6 +212,23 @@ export default function App() {
       if (timeout) clearTimeout(timeout);
     };
   }, [fontsLoaded]);
+
+  // Thiết lập Audio Mode cho ứng dụng
+  useEffect(() => {
+    const setAudioMode = async () => {
+      // Cast sang any để tương thích với typing hiện tại của expo-av
+      await (Audio as any).setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+        interruptionModeIOS: (Audio as any).INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+        interruptionModeAndroid: (Audio as any).INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+        shouldDuckAndroid: false,
+      });
+    };
+
+    setAudioMode();
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

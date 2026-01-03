@@ -5,7 +5,7 @@ import { parseLRC, parseVTT, LyricLine } from '../utils/lyricsParser';
 
 const { height } = Dimensions.get('window');
 const ITEM_HEIGHT = 90; 
-const SYNC_OFFSET = 780; 
+const SYNC_OFFSET = 760; 
 
 export const LyricsView = () => {
   const { currentTrack, position } = useMusicStore();

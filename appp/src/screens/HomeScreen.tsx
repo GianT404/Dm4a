@@ -158,7 +158,7 @@ export default function HomeScreen() {
         }
       >
         <Text className="my-6 text-2xl font-black tracking-widest text-white uppercase">
-          Đ<Text className="text-[#ef4444]">M4A</Text>
+          D<Text className="text-[#ef4444]">M4A</Text>
         </Text>
 
         <View className="pb-4 bg-[#121212]">
