@@ -1,9 +1,4 @@
 pluginManagement {
-  repositories {
-    gradlePluginPortal()
-    mavenCentral()
-    google()
-  }
   def reactNativeGradlePlugin = new File(
     providers.exec {
       workingDir(rootDir)
@@ -36,7 +31,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
 }
 expoAutolinking.useExpoModules()
 
-rootProject.name = 'appp'
+rootProject.name = 'Dm4a'
 
 expoAutolinking.useExpoVersionCatalog()
 
