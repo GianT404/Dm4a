@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, Modal, Dimensions, FlatList, ScrollView, StatusBar } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Modal, Dimensions, FlatList, ScrollView, StatusBar, Platform } from 'react-native';
 import { useMusicStore } from '../store/useMusicStore';
 import { PlayerService } from '../services/player';
 import { ChevronDown, Play, Pause, SkipBack, SkipForward, X, CaptionsIcon, CheckCircle } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
 import { LyricsView } from './LyricsView';
-import { LinearGradient } from 'expo-linear-gradient'; 
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
@@ -20,7 +21,7 @@ export const FullPlayer = () => {
   const { isFullPlayerVisible, currentTrack, isPlaying, position, duration, setFullPlayerVisible, changeLyricsLanguage } = useMusicStore();
   const [currentPage, setCurrentPage] = useState(0);
   const [showLangModal, setShowLangModal] = useState(false);
-
+  const insets = useSafeAreaInsets();
   const pages = [{ id: 'artwork' }, { id: 'lyrics' }];
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
@@ -39,9 +40,9 @@ export const FullPlayer = () => {
           <View className="absolute inset-0 w-full h-full">
             <Image
               source={{ uri: currentTrack.thumbnail }}
-              className="w-full h-full opacity-60" 
+              className="w-full h-full opacity-60"
               resizeMode="cover"
-              blurRadius={5} 
+              blurRadius={5}
             />
             {/* Lớp phủ đen để chữ dễ đọc */}
             <LinearGradient
@@ -52,7 +53,10 @@ export const FullPlayer = () => {
         )}
 
         {/* HEADER */}
-        <View className="z-10 flex-row items-center justify-between px-6 mt-12 mb-4">
+        <View
+          className="z-10 flex-row items-center justify-between px-6 mb-4"
+          style={{ marginTop: Platform.OS === 'android' ? insets.top + 12 : insets.top }}
+        >
           <TouchableOpacity onPress={() => setFullPlayerVisible(false)}>
             <ChevronDown color="white" size={32} />
           </TouchableOpacity>
@@ -88,7 +92,7 @@ export const FullPlayer = () => {
                       className="shadow-2xl rounded-xl"
                       resizeMode="cover"
                     />
-                    
+
                     {/* Thông tin bài hát */}
                     <View className="items-center w-full px-8 mt-10">
                       <Text className="text-xl font-black text-center text-white" numberOfLines={2}>
@@ -117,7 +121,10 @@ export const FullPlayer = () => {
         </View>
 
         {/* CONTROLS */}
-        <View className="px-8 pb-12">
+        <View
+          className="px-8"
+          style={{ paddingBottom: insets.bottom > 0 ? insets.bottom + 20 : 40 }}
+        >
           {/* Slider */}
           <Slider
             style={{ width: '100%', height: 40 }}
@@ -126,7 +133,7 @@ export const FullPlayer = () => {
             thumbTintColor="#FFFFFF"
             onSlidingComplete={PlayerService.seekTo}
           />
-          
+
           {/* Time Labels */}
           <View className="flex-row justify-between px-1 -mt-2">
             <Text className="text-white/60 text-[10px] font-mono font-bold">

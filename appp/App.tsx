@@ -7,19 +7,24 @@ import { useFonts, RobotoMono_400Regular, RobotoMono_700Bold } from '@expo-googl
 import { GestureHandlerRootView, GestureDetector, Gesture } from 'react-native-gesture-handler'; 
 import * as Audio from 'expo-av';
 
+// 👇 Import Navigation chuẩn
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
 import HomeScreen from './src/screens/HomeScreen';
 import PlaylistScreen from './src/screens/PlaylistScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
 import { MiniPlayer } from './src/components/MiniPlayer';
 import { FullPlayer } from './src/components/FullPlayer';
 import { useMusicStore } from './src/store/useMusicStore';
-import PlayerControls from './src/components/PlayerControls';
 import './global.css';
-import AudioService from './src/services/AudioService';
 
 SplashScreen.preventAutoHideAsync();
 
-
 const { width } = Dimensions.get('window');
+
+// 👇 Khởi tạo Stack (Không được viết lại hàm ở cuối file nữa nhé!)
+const Stack = createNativeStackNavigator();
 
 const setGlobalFont = () => {
   const fontConfig = { fontFamily: 'RobotoMono_400Regular' };
@@ -31,13 +36,15 @@ const setGlobalFont = () => {
 
 setGlobalFont();
 
-function MainLayout() {
+// ==========================================
+// 1. MAIN LAYOUT (Màn hình chính chứa Tab bar)
+// ==========================================
+function MainLayout({ navigation }: any) { // Nhận prop navigation để dùng nếu cần
   const [tab, setTab] = useState<'home' | 'library'>('home');
   const insets = useSafeAreaInsets();
   
   const playlist = useMusicStore((state) => state.playlist);
-  const currentTrack = useMusicStore((state) => state.currentTrack); 
-
+  
   // Animation States
   const [showPlusOne, setShowPlusOne] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -47,7 +54,7 @@ function MainLayout() {
   // Slide Animation
   const slideAnim = useRef(new Animated.Value(0)).current; 
   const tabBarPaddingBottom = insets.bottom > 0 ? insets.bottom : 2;
-  const tabBarHeight = 60 + tabBarPaddingBottom; // Chiều cao tổng của Tab Bar
+  const tabBarHeight = 60 + tabBarPaddingBottom; 
   const miniPlayerBottomPosition = tabBarHeight - 76; 
 
   // Hàm chuyển tab
@@ -138,6 +145,7 @@ function MainLayout() {
             </Animated.View>
         </View>
       </GestureDetector>
+      
       <View 
         style={{ 
           position: 'absolute', 
@@ -150,7 +158,6 @@ function MainLayout() {
         <MiniPlayer />
       </View>
       
-      {/* FullPlayer thường phủ toàn màn hình nên để nó ở ngoài cùng hoặc dùng Modal */}
       <FullPlayer />
 
       {/* BOTTOM TAB BAR */}
@@ -203,6 +210,9 @@ function MainLayout() {
   );
 }
 
+// ==========================================
+// 2. APP COMPONENT (Root)
+// ==========================================
 export default function App() {
   const [fontsLoaded] = useFonts({
     RobotoMono_400Regular,
@@ -214,22 +224,15 @@ export default function App() {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
     } else {
-      // Fallback: nếu fonts chưa load trong 7s thì ẩn splash để tránh dừng mãi ở splash
       timeout = setTimeout(() => {
         SplashScreen.hideAsync();
-        console.warn('SplashScreen hide fallback triggered — fonts not loaded within timeout');
       }, 7000);
     }
-
-    return () => {
-      if (timeout) clearTimeout(timeout);
-    };
+    return () => { if (timeout) clearTimeout(timeout); };
   }, [fontsLoaded]);
 
-  // Thiết lập Audio Mode cho ứng dụng
   useEffect(() => {
     const setAudioMode = async () => {
-      // Cast sang any để tương thích với typing hiện tại của expo-av
       await (Audio as any).setAudioModeAsync({
         allowsRecordingIOS: false,
         playsInSilentModeIOS: true,
@@ -239,14 +242,23 @@ export default function App() {
         shouldDuckAndroid: false,
       });
     };
-
     setAudioMode();
   }, []);
+
+  if (!fontsLoaded) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <MainLayout />
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {/* MainLayout: Home + Library */}
+            <Stack.Screen name="Main" component={MainLayout} /> 
+            
+            {/* ProfileScreen: Màn hình phụ, đè lên Main */}
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

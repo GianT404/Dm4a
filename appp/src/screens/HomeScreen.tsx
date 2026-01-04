@@ -17,6 +17,7 @@ import { getTrending, searchVideo } from '../services/api';
 import { useMusicStore } from '../store/useMusicStore';
 import { TrackItem } from '../components/TrackItem';
 import { PlayerService } from '../services/player';
+import { useNavigation } from '@react-navigation/native';
 export default function HomeScreen() {
   const {
     searchQuery,
@@ -28,7 +29,7 @@ export default function HomeScreen() {
     addToPlaylist,
     playlist,
   } = useMusicStore();
-
+  const navigation = useNavigation<any>();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -155,10 +156,24 @@ export default function HomeScreen() {
           />
         }
       >
-        <Text className="my-6 text-2xl font-black tracking-widest text-white uppercase">
-          D<Text className="text-[#ef4444]">M4A</Text>
-        </Text>
-
+          {/* HEADER WRAPPER */}
+        <View className="flex-row items-center justify-between my-6">
+          {/* LOGO BÊN TRÁI */}
+          <Text className="text-2xl font-black tracking-widest text-[#eaeaea] uppercase">
+            D<Text className="text-[#ef4444]">M4A</Text>
+          </Text>
+<View className="flex-row items-center gap-4">
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('Profile')}
+              className="p-0.5 border-2 border-[#eaeaea] rounded-full"
+            >
+              <Image 
+                source={require('../../assets/image.png')} 
+                className="w-8 h-8 rounded-full"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
         <View className="pb-4 bg-[#121212]">
           <View className="flex-row items-center px-4 py-3 bg-white rounded-xl">
             <Search color="#000" size={20} />
@@ -177,7 +192,7 @@ export default function HomeScreen() {
           {trendingData.length > 0 && (
             <View className="mb-8">
               <Text className="mb-4 text-xl font-bold text-white">
-                Thử xem biết đâu nghiện
+                Nghiện đấy!
               </Text>
               <FlatList
                 horizontal

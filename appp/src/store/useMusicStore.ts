@@ -43,9 +43,10 @@ interface MusicState {
   setSearchQuery: (query: string) => void;
   setSearchResults: (results: any[]) => void;
   setTrendingData: (data: any[]) => void;
+  restoreTrack: (track: any) => void;
   playNext: () => void;
   playPrev: () => void;
-  
+  deletedPlaylist: any[];
   changeLyricsLanguage: (trackId: string, langCode: string) => Promise<void>;
 }
 
@@ -70,6 +71,7 @@ export const useMusicStore = create<MusicState>()(
       setTrack: (t) => set({ currentTrack: t }),
       setProgress: (p, d) => set({ position: p, duration: d }),
       setLyrics: (l) => set({ lyrics: l }),
+      deletedPlaylist: [],
       isShuffle: false, 
   toggleShuffle: () => set((state) => ({ isShuffle: !state.isShuffle })),
       addToPlaylist: async (rawTrack) => {
@@ -138,8 +140,31 @@ const availableLyrics = tracks.map((t: any) => {
         }
       },
 
-      removeFromPlaylist: (id) => set(state => ({ playlist: state.playlist.filter(t => t.id !== id) })),
-      
+      removeFromPlaylist: (id: string) => {
+    const { playlist, deletedPlaylist } = get();
+    const trackToRemove = playlist.find((t) => t.id === id);
+
+    if (trackToRemove) {
+      set({
+        // Thêm vào danh sách đã xóa
+        deletedPlaylist: [trackToRemove, ...deletedPlaylist],
+        // Xóa khỏi danh sách hiện tại
+        playlist: playlist.filter((t) => t.id !== id),
+      });
+    }
+  },
+      restoreTrack: (track: any) => {
+    const { playlist, deletedPlaylist } = get();
+    // Check xem có trong playlist chưa để tránh trùng
+    const exists = playlist.find(t => t.id === track.id);
+    
+    if (!exists) {
+        set({
+            playlist: [...playlist, track], // Thêm lại vào playlist
+            deletedPlaylist: deletedPlaylist.filter(t => t.id !== track.id) // Xóa khỏi thùng rác
+        });
+    }
+  },
       playNext: () => { 
         const { playlist, currentTrack } = get();
         if(!currentTrack) return;
