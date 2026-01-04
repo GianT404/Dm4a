@@ -167,6 +167,7 @@ export default function HomeScreen() {
             <TextInput
               className="flex-1 ml-3 text-base font-bold text-black"
               placeholder="Tìm bài hát, nghệ sĩ..."
+              placeholderTextColor="#52525b"
               value={searchQuery}
               onChangeText={setSearchQuery}
               onSubmitEditing={handleSearch}
