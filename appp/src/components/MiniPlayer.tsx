@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Play, Pause } from 'lucide-react-native';
 import { useMusicStore } from '../store/useMusicStore';
 import { PlayerService } from '../services/player';
+import { MarqueeText } from './MarqueeText';
 
 export const MiniPlayer = () => {
   // ✅ Subscribe to ALL relevant fields explicitly
@@ -50,9 +51,7 @@ export const MiniPlayer = () => {
         className="w-10 h-10 rounded-lg" 
       />
       <View className="flex-1 ml-3">
-        <Text className="text-sm font-bold text-white" numberOfLines={1}>
-          {currentTrack.title}
-        </Text>
+        <MarqueeText text={currentTrack.title} />
         <Text className="text-xs text-zinc-500">
           {currentTrack.author}
         </Text>
