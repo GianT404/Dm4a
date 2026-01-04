@@ -36,6 +36,7 @@ function MainLayout() {
   const insets = useSafeAreaInsets();
   
   const playlist = useMusicStore((state) => state.playlist);
+  const currentTrack = useMusicStore((state) => state.currentTrack); 
 
   // Animation States
   const [showPlusOne, setShowPlusOne] = useState(false);
@@ -45,10 +46,13 @@ function MainLayout() {
   
   // Slide Animation
   const slideAnim = useRef(new Animated.Value(0)).current; 
+  const tabBarPaddingBottom = insets.bottom > 0 ? insets.bottom : 2;
+  const tabBarHeight = 60 + tabBarPaddingBottom; // Chiều cao tổng của Tab Bar
+  const miniPlayerBottomPosition = tabBarHeight - 76; 
 
   // Hàm chuyển tab
   const switchTab = (newTab: 'home' | 'library') => {
-    if (tab === newTab) return; // Đang ở tab đó rồi thì thôi
+    if (tab === newTab) return;
     setTab(newTab);
     Animated.timing(slideAnim, {
       toValue: newTab === 'home' ? 0 : 1, 
@@ -59,19 +63,16 @@ function MainLayout() {
 
   // 👇 GESTURE: Xử lý vuốt tay
   const panGesture = Gesture.Pan()
-    .activeOffsetX([-20, 20]) // Chỉ kích hoạt khi vuốt ngang > 20px (tránh nhầm với cuộn dọc)
+    .activeOffsetX([-20, 20])
     .onEnd((e) => {
-      // Vuốt sang trái (velocityX < 0) -> Qua Library
       if (e.velocityX < -500 && tab === 'home') {
-        // Cần runOnJS vì state update phải ở luồng JS
         switchTab('library');
       }
-      // Vuốt sang phải (velocityX > 0) -> Về Home
       else if (e.velocityX > 500 && tab === 'library') {
         switchTab('home');
       }
     })
-    .runOnJS(true); // Quan trọng: Cho phép chạy hàm JS (switchTab) bên trong gesture
+    .runOnJS(true);
 
   // Trigger Animation +1 Badge
   useEffect(() => {
@@ -137,8 +138,19 @@ function MainLayout() {
             </Animated.View>
         </View>
       </GestureDetector>
-
-      <MiniPlayer />
+      <View 
+        style={{ 
+          position: 'absolute', 
+          left: 0, 
+          right: 0, 
+          bottom: miniPlayerBottomPosition, 
+          zIndex: 1
+        }}
+      >
+        <MiniPlayer />
+      </View>
+      
+      {/* FullPlayer thường phủ toàn màn hình nên để nó ở ngoài cùng hoặc dùng Modal */}
       <FullPlayer />
 
       {/* BOTTOM TAB BAR */}
@@ -147,10 +159,11 @@ function MainLayout() {
         style={{ 
           bottom: 0,
           paddingBottom: Platform.OS === 'ios' ? insets.bottom : insets.bottom + 10,
-          height: 60 + (insets.bottom > 0 ? insets.bottom : 20),
+          height: tabBarHeight, 
           paddingTop: 10,
           paddingHorizontal: 24,
-          alignItems: 'flex-start'
+          alignItems: 'flex-start',
+          zIndex: 20
         }}
       >
         <TouchableOpacity 
@@ -171,13 +184,13 @@ function MainLayout() {
 
              {showPlusOne && (
                 <Animated.View 
-                    className="absolute flex-row items-center px-2 py-1 bg-green-500 rounded-full"
-                    style={{
-                        top: -10, 
-                        right: 20,
-                        opacity: fadeAnim, 
-                        transform: [{ translateY: translateYAnim }] 
-                    }}
+                  className="absolute flex-row items-center px-2 py-1 bg-green-500 rounded-full"
+                  style={{
+                      top: -10, 
+                      right: 20,
+                      opacity: fadeAnim, 
+                      transform: [{ translateY: translateYAnim }] 
+                  }}
                 >
                     <Music size={10} color="white" />
                     <Text className="ml-1 text-[10px] font-bold text-white">+1</Text>

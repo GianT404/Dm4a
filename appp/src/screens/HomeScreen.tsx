@@ -16,9 +16,7 @@ import { Search, CheckCircle } from 'lucide-react-native';
 import { getTrending, searchVideo } from '../services/api';
 import { useMusicStore } from '../store/useMusicStore';
 import { TrackItem } from '../components/TrackItem';
-import PlayerControls from '../components/PlayerControls';
 import { PlayerService } from '../services/player';
-
 export default function HomeScreen() {
   const {
     searchQuery,
