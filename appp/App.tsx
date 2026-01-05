@@ -18,6 +18,7 @@ import { MiniPlayer } from './src/components/MiniPlayer';
 import { FullPlayer } from './src/components/FullPlayer';
 import { useMusicStore } from './src/store/useMusicStore';
 import './global.css';
+import { PlayerService } from './src/services/player';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -243,6 +244,12 @@ export default function App() {
       });
     };
     setAudioMode();
+  }, []);
+  useEffect(() => {
+    const setupPlayer = async () => {
+      PlayerService.init(); 
+    };
+    setupPlayer();
   }, []);
 
   if (!fontsLoaded) return null;
