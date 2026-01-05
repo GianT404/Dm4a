@@ -2,7 +2,7 @@ A personal project, not for commercial purposes.
 
 DM4A Project (D-Download and M4A-.m4a)
 
-The project involves downloading the .m4a file and streaming the lyrics.
+The project downloading the .m4a file and streaming the lyrics.
 
 1. Local Development Setup
 
