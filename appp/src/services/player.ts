@@ -65,7 +65,9 @@ export const PlayerService = {
 
   playTrack: async (trackId: string, isAutoNext = false) => {
     // Giữ CPU thức dậy trong quá trình chuyển bài
-    try { await activateKeepAwakeAsync(); } catch(e) {}
+    try { await activateKeepAwakeAsync(); } catch(e) {
+        console.error(' KeepAwake Error', e);
+    }
 
     if (!isAutoNext && isSwitchingTrack) {
         log(' Blocked: Spam play request');

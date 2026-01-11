@@ -37,7 +37,7 @@ export default function ProfileScreen() {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
           <View className="items-center mt-4 mb-6">
-            <View className="p-1 border-4 border-zinc-800 rounded-full shadow-2xl bg-[#121212]">
+            <View className="p-1 border-2 border-zinc-800 rounded-full  bg-[#121212]">
               <Image source={require('../../assets/image.png')} className="w-32 h-32 rounded-full" />
             </View>
           </View>

@@ -157,7 +157,7 @@ export default function HomeScreen() {
         }
       >
           {/* HEADER WRAPPER */}
-        <View className="flex-row items-center justify-between my-6">
+        <View className="flex-row items-center justify-between my-4">
           {/* LOGO BÊN TRÁI */}
           <Text className="text-2xl font-black tracking-widest text-[#eaeaea] uppercase">
             D<Text className="text-[#ef4444]">M4A</Text>
