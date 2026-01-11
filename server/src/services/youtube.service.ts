@@ -2,6 +2,7 @@
 
 import ytdlp from "yt-dlp-exec";
 import yts from "yt-search";
+import { spawn } from 'child_process';
 import { Innertube, UniversalCache } from "youtubei.js";
 import fs from 'fs';
 import path from 'path';
@@ -321,51 +322,83 @@ const vibes = [
   },
 
   // 3. Download Audio (Giữ nguyên code của ông)
+// downloadAudioStream: (videoId: string) => {
+//     const url = `https://www.youtube.com/watch?v=${videoId}`;
+//     console.log(`[Stream]  Start streaming: ${videoId}`);
+
+//     try {
+//         const args: any = {
+//             output: "-",
+//             format: "bestaudio[ext=m4a]/bestaudio/best", 
+
+//             noCheckCertificates: true,
+//             noWarnings: true,
+//             preferFreeFormats: true,
+//             addHeader: [
+//                 'referer:youtube.com',
+//                 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+//             ]
+//         };
+
+//         if (hasCookies) {
+//              args.cookies = COOKIES_PATH;
+//         }
+
+//         // Mở pipe stderr để debug nếu lỗi
+//         const subprocess = (ytdlp as any).exec(url, args, { stdio: ["ignore", "pipe", "pipe"] });
+
+//         if (subprocess.stderr) {
+//             subprocess.stderr.on('data', (d: any) => console.log(`[yt-dlp log]: ${d.toString()}`));
+//         }
+
+//         if (subprocess.stdout) return subprocess.stdout;
+
+//         throw new Error("yt-dlp failed to start stdout");
+
+//     } catch (e) {
+//         console.warn(`[Stream] ⚠️ yt-dlp failed, switching to fallback...`, e);
+
+//         // CÁCH 2: Fallback cuối cùng (ytdl-core)
+//         // Nếu yt-dlp vẫn lỗi thì dùng cái này cứu cánh
+//         const agent = ytdl.createAgent(hasCookies ? JSON.parse(fs.readFileSync(COOKIES_PATH, 'utf-8')) : undefined);
+//         return ytdl(url, {
+//             agent,
+//             filter: 'audioonly',
+//             quality: 'lowestaudio',
+//             highWaterMark: 1 << 25
+//         });
+//     }
+//   },
 downloadAudioStream: (videoId: string) => {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
-    console.log(`[Stream]  Start streaming: ${videoId}`);
+    console.log(`[Stream] 🚀 Start streaming (System yt-dlp): ${videoId}`);
 
     try {
-        const args: any = {
-            output: "-",
-            format: "bestaudio[ext=m4a]/bestaudio/best", 
+      // Dùng spawn gọi trực tiếp yt-dlp đã cài trên Termux
+      const process = spawn('yt-dlp', [
+        '-o', '-',                 // Output ra stdout (để pipe)
+        '-f', 'bestaudio[ext=m4a]/bestaudio/best', // Ưu tiên m4a
+        url
+      ]);
 
-            noCheckCertificates: true,
-            noWarnings: true,
-            preferFreeFormats: true,
-            addHeader: [
-                'referer:youtube.com',
-                'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            ]
-        };
-
-        if (hasCookies) {
-             args.cookies = COOKIES_PATH;
+      // Log lỗi nếu yt-dlp la làng
+      process.stderr.on('data', (data) => {
+        const msg = data.toString();
+        // Bỏ qua mấy dòng log phần trăm download cho đỡ rác
+        if (!msg.includes('[download]') && !msg.includes('ETA')) {
+          console.log(`[yt-dlp stderr]: ${msg.trim()}`);
         }
+      });
 
-        // Mở pipe stderr để debug nếu lỗi
-        const subprocess = (ytdlp as any).exec(url, args, { stdio: ["ignore", "pipe", "pipe"] });
+      process.on('close', (code) => {
+        if (code !== 0) console.log(`[Stream] ⚠️ yt-dlp exited with code ${code}`);
+      });
 
-        if (subprocess.stderr) {
-            subprocess.stderr.on('data', (d: any) => console.log(`[yt-dlp log]: ${d.toString()}`));
-        }
-
-        if (subprocess.stdout) return subprocess.stdout;
-
-        throw new Error("yt-dlp failed to start stdout");
+      return process.stdout; // Trả về stream chuẩn
 
     } catch (e) {
-        console.warn(`[Stream] ⚠️ yt-dlp failed, switching to fallback...`, e);
-
-        // CÁCH 2: Fallback cuối cùng (ytdl-core)
-        // Nếu yt-dlp vẫn lỗi thì dùng cái này cứu cánh
-        const agent = ytdl.createAgent(hasCookies ? JSON.parse(fs.readFileSync(COOKIES_PATH, 'utf-8')) : undefined);
-        return ytdl(url, {
-            agent,
-            filter: 'audioonly',
-            quality: 'lowestaudio',
-            highWaterMark: 1 << 25
-        });
+      console.error(`[Stream] ❌ System spawn failed:`, e);
+      throw e;
     }
   },
 

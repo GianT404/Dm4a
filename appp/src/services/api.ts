@@ -2,11 +2,11 @@ import axios from 'axios';
 
 // export const API_URL = 'http://192.168.2.28:3000/api';
 
-export const API_URL = 'http://34.63.75.191:3000/api';
+export const API_URL = 'https://api.coldbase.id.vn/api';
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000, // Timeout 10s cho chắc
+  timeout: 60000, 
 });
 
 // 3. Hàm Search (Cần cho HomeScreen)
