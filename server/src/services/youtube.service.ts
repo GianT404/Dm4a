@@ -378,6 +378,12 @@ downloadAudioStream: (videoId: string) => {
       const process = spawn('yt-dlp', [
         '-o', '-',                 // Output ra stdout (để pipe)
         '-f', 'bestaudio[ext=m4a]/bestaudio/best', // Ưu tiên m4a
+
+        '--no-playlist',
+        '--no-part',
+        '--no-mtime',
+        '--buffer-size', '16K',
+        '--concurrent-fragments', '4',
         url
       ]);
 

@@ -2,7 +2,6 @@ import type { Request, Response } from 'express';
 import { YouTubeService } from '../services/youtube.service';
 
 export const MediaController = {
-  // 👇 Đã sửa: Trả về data luôn (Array), không bọc trong object nữa
   search: async (req: Request, res: Response) => {
     try {
       const { query } = req.query;
@@ -11,7 +10,6 @@ export const MediaController = {
     } catch (e) { res.status(500).json({ error: 'Search Error' }); }
   },
 
-  //  Đã thêm: Hàm này lúc nãy ông bị thiếu
   getTrending: async (req: Request, res: Response) => {
     try {
       const data = await YouTubeService.getTrending();
