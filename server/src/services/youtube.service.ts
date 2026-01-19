@@ -227,7 +227,10 @@ const vibes = [
   // 2. Lấy Metadata & List Sub (Giữ nguyên code của ông)
   getMetadata: async (videoId: string) => {
     console.log(`[Meta] 🔍 Đang soi video: ${videoId}`);
-
+    if (metaCache.has(videoId)) {
+        console.log(`[Meta] ⚡ Hit Cache: ${videoId}`);
+        return metaCache.get(videoId);
+    }
     try {
       const client = await getClient();
       const info = await client.getInfo(videoId);
@@ -314,6 +317,8 @@ const result = {
         title: info.basic_info.title || 'Unknown',
         tracks: tracks 
     };
+    metaCache.set(videoId, result); // Lưu cache
+    return result;
 
     } catch (error: any) {
       console.error(`[Meta Error]`, error);
