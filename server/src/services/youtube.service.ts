@@ -10,7 +10,7 @@ import ytdl from "@distube/ytdl-core";
 
 const COOKIES_PATH = path.resolve(__dirname, '../../cookies.txt');
 const hasCookies = fs.existsSync(COOKIES_PATH);
-
+const metaCache = new Map<string, any>();
 if (hasCookies) console.log('SERVER: Found cookies.txt ');
 else console.warn('SERVER: No cookies found');
 
@@ -309,11 +309,11 @@ const vibes = [
         console.log(`[Meta]  Video này KHÔNG CÓ caption!`);
       }
 
-      return {
+const result = {
         id: videoId,
         title: info.basic_info.title || 'Unknown',
         tracks: tracks 
-      };
+    };
 
     } catch (error: any) {
       console.error(`[Meta Error]`, error);
@@ -384,6 +384,7 @@ downloadAudioStream: (videoId: string) => {
         '--no-mtime',
         '--buffer-size', '16K',
         '--concurrent-fragments', '4',
+        '--dns-servers', '8.8.8.8,1.1.1.1',
         url
       ]);
 
