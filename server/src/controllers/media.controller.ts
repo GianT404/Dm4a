@@ -11,7 +11,7 @@ export const MediaController = {
     } catch (e) { res.status(500).json({ error: 'Search Error' }); }
   },
 
-  // 👇 Đã thêm: Hàm này lúc nãy ông bị thiếu
+  //  Đã thêm: Hàm này lúc nãy ông bị thiếu
   getTrending: async (req: Request, res: Response) => {
     try {
       const data = await YouTubeService.getTrending();
